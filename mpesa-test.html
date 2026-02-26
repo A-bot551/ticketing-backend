@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Ticket Purchase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .event-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .event-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .event-info {
+            color: #666;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .event-info i {
+            width: 20px;
+            color: #764ba2;
+        }
+        .price {
+            font-size: 32px;
+            color: #27ae60;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .payment-form {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            border-color: #764ba2;
+            outline: none;
+        }
+        .btn-mpesa {
+            width: 100%;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background 0.3s;
+        }
+        .btn-mpesa:hover {
+            background: #219a52;
+        }
+        .btn-mpesa:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            display: block;
+        }
+        .ticket {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        .ticket.show {
+            display: block;
+        }
+        .ticket h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .qr-placeholder {
+            width: 150px;
+            height: 150px;
+            background: #f0f0f0;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Event Details Card -->
+        <div class="event-card">
+            <h1 class="event-title">🎉 Tech Conference 2026</h1>
+            <div class="event-info">
+                <span>📅</span>
+                <span>March 15-16, 2026</span>
+            </div>
+            <div class="event-info">
+                <span>📍</span>
+                <span>KICC, Nairobi</span>
+            </div>
+            <div class="event-info">
+                <span>👥</span>
+                <span>500+ Attendees</span>
+            </div>
+            <div class="price">KES 2,500</div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="payment-form">
+            <h2 style="margin-bottom: 20px; color: #333;">Buy Ticket</h2>
+            
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="name" placeholder="John Doe" value="John Doe">
+            </div>
+
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="john@example.com" value="john@example.com">
+            </div>
+
+            <div class="form-group">
+                <label>M-Pesa Phone Number</label>
+                <input type="tel" id="phone" placeholder="254708374149" value="254708374149">
+                <small style="color: #666;">Format: 254XXXXXXXXX</small>
+            </div>
+
+            <div class="form-group">
+                <label>Number of Tickets</label>
+                <select id="tickets">
+                    <option value="1">1 Ticket (KES 2,500)</option>
+                    <option value="2">2 Tickets (KES 5,000)</option>
+                    <option value="3">3 Tickets (KES 7,500)</option>
+                    <option value="4">4 Tickets (KES 10,000)</option>
+                    <option value="5">5 Tickets (KES 12,500)</option>
+                </select>
+            </div>
+
+            <button class="btn-mpesa" onclick="payWithMpesa()" id="payBtn">
+                <span>💰</span>
+                Pay with M-Pesa
+            </button>
+
+            <div class="status" id="status"></div>
+        </div>
+
+        <!-- Ticket Display -->
+        <div class="ticket" id="ticket">
+            <h3>🎟️ Your Ticket</h3>
+            <div style="font-size: 24px; margin: 10px 0;">Tech Conference 2026</div>
+            <div id="ticketName"></div>
+            <div id="ticketRef"></div>
+            <div class="qr-placeholder">
+                📱 QR Code
+                <br>
+                (Will be generated here)
+            </div>
+            <p style="color: #666; margin-top: 15px;">Show this QR code at the entrance</p>
+        </div>
+    </div>
+
+    <script>
+        // IMPORTANT: Replace with your ngrok URL
+        const API_BASE_URL = 'http://localhost:3000';
+
+        async function payWithMpesa() {
+            // Get form values
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const tickets = document.getElementById('tickets').value;
+            const amount = tickets * 2500; // Calculate total
+            
+            // Validate phone number
+            if (!phone.match(/^254\d{9}$/)) {
+                showStatus('Please enter a valid phone number (Format: 254XXXXXXXXX)', 'error');
+                return;
+            }
+
+            // Disable button and show loading
+            const payBtn = document.getElementById('payBtn');
+            payBtn.disabled = true;
+            showStatus('Sending M-Pesa STK Push to your phone...', 'loading');
+
+            try {
+                // Call your backend API
+                const response = await fetch(`${API_BASE_URL}/api/pay`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        amount: amount.toString(),
+                        eventId: 'tech-conf-2026'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showStatus(
+                        `✅ STK Push sent! Check your phone and enter PIN to complete payment.\n\nReference: ${data.reference}`,
+                        'success'
+                    );
+                    
+                    // Show ticket preview
+                    document.getElementById('ticketName').innerHTML = `<strong>Name:</strong> ${name}`;
+                    document.getElementById('ticketRef').innerHTML = `<strong>Reference:</strong> ${data.reference}`;
+                    document.getElementById('ticket').classList.add('show');
+                    
+                    // Here you would typically start polling for payment status
+                    checkPaymentStatus(data.reference);
+                } else {
+                    showStatus(`Error: ${data.error || 'Payment failed'}`, 'error');
+                    payBtn.disabled = false;
+                }
+
+            } catch (error) {
+                showStatus(`Network error: ${error.message}`, 'error');
+                payBtn.disabled = false;
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        // Optional: Poll for payment status
+        function checkPaymentStatus(reference) {
+            console.log('Checking payment status for:', reference);
+            // You would implement this to check if payment completed
+            // For now, just show a message
+            setTimeout(() => {
+                showStatus('Payment completed! Check your email for e-ticket.', 'success');
+            }, 30000); // Simulate payment after 30 seconds
+        }
+
+        // Format phone number as user types
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let phone = e.target.value.replace(/\D/g, '');
+            if (phone.length > 0 && !phone.startsWith('254')) {
+                if (phone.startsWith('0')) {
+                    phone = '254' + phone.substring(1);
+                } else if (phone.startsWith('7')) {
+                    phone = '254' + phone;
+                }
+            }
+            e.target.value = phone;
+        });
+    </script>
+</body>
+</html>

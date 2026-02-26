@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-Pesa Ticket Payment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .event-info {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .event-info h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .event-info p {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        input.error {
+            border-color: #dc3545;
+        }
+        
+        .amount-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            display: none;
+        }
+        
+        #result.show {
+            display: block;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .ticket {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+            border: 3px dashed #28a745;
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+        
+        .ticket.show {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .ticket-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .ticket-header h3 {
+            color: #28a745;
+            font-size: 24px;
+        }
+        
+        .ticket-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .ticket-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .detail-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .qr-code {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .qr-placeholder {
+            width: 150px;
+            height: 150px;
+            background: #e9ecef;
+            margin: 0 auto 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            margin-top: 20px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar.show {
+            display: block;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #28a745;
+            width: 0%;
+            transition: width 0.3s;
+            animation: progress 2s ease-in-out infinite;
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 100%; }
+            100% { width: 0%; }
+        }
+        
+        .connection-status {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 10px;
+            color: #6c757d;
+        }
+        
+        .connection-status.connected {
+            color: #28a745;
+        }
+        
+        .connection-status.disconnected {
+            color: #dc3545;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Event Card -->
+        <div class="card">
+            <div class="event-info">
+                <h3>🎉 Tech Conference 2026</h3>
+                <p>📅 March 15-16, 2026</p>
+                <p>📍 KICC, Nairobi</p>
+                <p>👥 500+ Attendees</p>
+            </div>
+            
+            <div class="amount-display" id="amountDisplay">
+                KES 2,500
+            </div>
+            
+            <div class="form-group">
+                <label>📱 Phone Number (254 format)</label>
+                <input type="tel" id="phone" value="254708374149" placeholder="254XXXXXXXXX">
+            </div>
+            
+            <div class="form-group">
+                <label>🎫 Number of Tickets</label>
+                <input type="number" id="tickets" value="1" min="1" max="10" onchange="updateAmount()">
+            </div>
+            
+            <div class="form-group">
+                <label>📧 Email (for e-ticket)</label>
+                <input type="email" id="email" value="customer@example.com" placeholder="your@email.com">
+            </div>
+            
+            <button onclick="payWithMpesa()" id="payBtn">
+                <span>💰</span> Pay with M-Pesa
+            </button>
+            
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill"></div>
+            </div>
+            
+            <div id="result"></div>
+            
+            <div class="stats" id="stats" style="display: none;">
+                <span>📊 Total: <span id="statsTotal">0</span></span>
+                <span>✅ Completed: <span id="statsCompleted">0</span></span>
+                <span>⏳ Pending: <span id="statsPending">0</span></span>
+            </div>
+            
+            <div class="connection-status" id="connectionStatus">
+                🔌 Checking connection...
+            </div>
+        </div>
+
+        <!-- Ticket Display -->
+        <div class="ticket" id="ticket">
+            <div class="ticket-header">
+                <h3>🎟️ E-Ticket</h3>
+                <span class="ticket-badge">PAID</span>
+            </div>
+            
+            <div class="ticket-details" id="ticketDetails">
+                <!-- Filled by JavaScript -->
+            </div>
+            
+            <div class="qr-code">
+                <div class="qr-placeholder" id="qrPlaceholder">📱</div>
+                <p style="color: #6c757d; font-size: 12px;">Scan at entrance</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="window.print()" style="width: auto; padding: 10px 20px; background: #6c757d;">
+                    🖨️ Print Ticket
+                </button>
+                <button onclick="downloadTicket()" style="width: auto; padding: 10px 20px; background: #17a2b8; margin-top: 10px;">
+                    📥 Download
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_URLS = [
+            'http://localhost:3000',
+            'https://aerolitic-madge-kernelly.ngrok-free.dev'
+        ];
+        
+        let currentApiUrl = API_URLS[0];
+        let paymentCheckInterval = null;
+        let currentCheckoutId = null;
+        let currentReference = null;
+
+        // Update amount based on tickets
+        function updateAmount() {
+            const tickets = document.getElementById('tickets').value;
+            const amount = tickets * 2500;
+            document.getElementById('amountDisplay').textContent = `KES ${amount.toLocaleString()}`;
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message.replace(/\n/g, '<br>');
+            resultDiv.className = type;
+            resultDiv.classList.add('show');
+        }
+
+        // Clear status
+        function clearStatus() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.classList.remove('show');
+        }
+
+        // Show progress
+        function setProgress(show) {
+            const progressBar = document.getElementById('progressBar');
+            if (show) {
+                progressBar.classList.add('show');
+            } else {
+                progressBar.classList.remove('show');
+            }
+        }
+
+        // Check payment status from backend
+        async function checkPaymentStatus(checkoutRequestId, reference) {
+            let attempts = 0;
+            const maxAttempts = 30; // 2 minutes
+            
+            currentCheckoutId = checkoutRequestId;
+            currentReference = reference;
+            
+            showStatus(`⏳ Waiting for payment confirmation...\nCheckout ID: ${checkoutRequestId}`, 'loading');
+            setProgress(true);
+            
+            paymentCheckInterval = setInterval(async () => {
+                attempts++;
+                
+                try {
+                    // Call the real status endpoint
+                    const response = await fetch(`${currentApiUrl}/api/payment-status/${checkoutRequestId}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Status check:', data);
+                        
+                        if (data.status === 'completed') {
+                            // Payment completed
+                            clearInterval(paymentCheckInterval);
+                            setProgress(false);
+                            
+                            showStatus(`✅ Payment completed!\nReceipt: ${data.receiptNumber}`, 'success');
+                            
+                            // Show ticket
+                            showTicket({
+                                receiptNumber: data.receiptNumber,
+                                amount: data.amount,
+                                phone: data.phone,
+                                reference: data.reference || reference
+                            });
+                            
+                            // Update stats
+                            fetchStats();
+                            
+                        } else if (data.status === 'failed') {
+                            clearInterval(paymentCheckInterval);
+                            setProgress(false);
+                            showStatus(`❌ Payment failed. Please try again.`, 'error');
+                            document.getElementById('payBtn').disabled = false;
+                        }
+                        
+                        // Update status message with attempts
+                        if (data.status === 'pending') {
+                            showStatus(`⏳ Still waiting... (${attempts}/${maxAttempts})\nCheck your phone and enter PIN`, 'loading');
+                        }
+                    }
+                    
+                    if (attempts >= maxAttempts) {
+                        clearInterval(paymentCheckInterval);
+                        setProgress(false);
+                        showStatus('⏰ Payment timeout. Please check your M-Pesa statement.', 'error');
+                        document.getElementById('payBtn').disabled = false;
+                    }
+                    
+                } catch (error) {
+                    console.log('Status check error:', error);
+                    // Don't clear interval on error, just keep trying
+                }
+            }, 4000); // Check every 4 seconds
+        }
+
+        // Show ticket
+        function showTicket(data) {
+            const ticket = document.getElementById('ticket');
+            const ticketDetails = document.getElementById('ticketDetails');
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+            const tickets = document.getElementById('tickets').value;
+            
+            ticketDetails.innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">Event</div>
+                    <div class="detail-value">Tech Conference 2026</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Date</div>
+                    <div class="detail-value">March 15-16, 2026</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Tickets</div>
+                    <div class="detail-value">${tickets} Ticket(s)</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Amount</div>
+                    <div class="detail-value">KES ${(tickets * 2500).toLocaleString()}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Receipt No.</div>
+                    <div class="detail-value">${data.receiptNumber}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Reference</div>
+                    <div class="detail-value">${data.reference || currentReference}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Phone</div>
+                    <div class="detail-value">${data.phone || phone}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Email</div>
+                    <div class="detail-value">${email}</div>
+                </div>
+            `;
+            
+            ticket.classList.add('show');
+            
+            // Generate QR code (simulated)
+            const qrPlaceholder = document.getElementById('qrPlaceholder');
+            qrPlaceholder.innerHTML = '✅';
+            qrPlaceholder.style.fontSize = '64px';
+        }
+
+        // Fetch statistics
+        async function fetchStats() {
+            try {
+                const response = await fetch(`${currentApiUrl}/api/stats`);
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('statsTotal').textContent = stats.total;
+                    document.getElementById('statsCompleted').textContent = stats.completed;
+                    document.getElementById('statsPending').textContent = stats.pending;
+                    document.getElementById('stats').style.display = 'flex';
+                }
+            } catch (error) {
+                console.log('Could not fetch stats');
+            }
+        }
+
+        // Download ticket as text file
+        function downloadTicket() {
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+            const tickets = document.getElementById('tickets').value;
+            const receipt = document.querySelector('#ticketDetails .detail-item:nth-child(5) .detail-value')?.textContent || 'N/A';
+            
+            const ticketText = `
+TECH CONFERENCE 2026 - E-TICKET
+================================
+Event: Tech Conference 2026
+Date: March 15-16, 2026
+Venue: KICC, Nairobi
+
+TICKET DETAILS
+--------------------------------
+Tickets: ${tickets}
+Amount: KES ${(tickets * 2500).toLocaleString()}
+Receipt: ${receipt}
+Phone: ${phone}
+Email: ${email}
+
+Please present this ticket at the entrance.
+QR Code will be scanned for verification.
+
+Thank you for your purchase!
+            `;
+            
+            const blob = new Blob([ticketText], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ticket-${receipt}.txt`;
+            a.click();
+        }
+
+        // Pay with M-Pesa
+        async function payWithMpesa() {
+            const payBtn = document.getElementById('payBtn');
+            payBtn.disabled = true;
+            
+            const phone = document.getElementById('phone').value;
+            const tickets = document.getElementById('tickets').value;
+            const amount = tickets * 2500;
+            const eventId = 'tech-conf-2026';
+            
+            // Validate phone
+            if (!phone.match(/^254\d{9}$/)) {
+                showStatus('❌ Invalid phone number. Use format: 254XXXXXXXXX', 'error');
+                payBtn.disabled = false;
+                return;
+            }
+            
+            clearStatus();
+            setProgress(true);
+            showStatus('⏳ Sending M-Pesa request...', 'loading');
+
+            // Try each API URL
+            for (const apiUrl of API_URLS) {
+                try {
+                    console.log(`Trying ${apiUrl}...`);
+                    
+                    const response = await fetch(`${apiUrl}/api/pay`, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            phone: phone,
+                            amount: amount.toString(),
+                            eventId: eventId
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        let message = `✅ STK Push Sent!\n`;
+                        message += `📱 Check your phone and enter PIN\n`;
+                        message += `📋 Reference: ${data.reference}`;
+                        
+                        showStatus(message, 'success');
+                        
+                        currentApiUrl = apiUrl;
+                        document.getElementById('connectionStatus').textContent = `✅ Connected to ${apiUrl}`;
+                        document.getElementById('connectionStatus').classList.add('connected');
+                        
+                        // Start checking payment status
+                        if (data.checkoutRequestId) {
+                            checkPaymentStatus(data.checkoutRequestId, data.reference);
+                        } else if (data.data && data.data.CheckoutRequestID) {
+                            checkPaymentStatus(data.data.CheckoutRequestID, data.reference);
+                        }
+                        
+                        // Fetch stats
+                        fetchStats();
+                        
+                        return;
+                    }
+                    
+                } catch (error) {
+                    console.log(`Failed with ${apiUrl}:`, error.message);
+                }
+            }
+            
+            showStatus('❌ Could not connect to payment server. Check if backend is running.', 'error');
+            setProgress(false);
+            payBtn.disabled = false;
+        }
+
+        // Test connection on page load
+        window.onload = async function() {
+            const statusEl = document.getElementById('connectionStatus');
+            
+            for (const apiUrl of API_URLS) {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (response.ok) {
+                        const data = await response.json();
+                        statusEl.innerHTML = `✅ Connected to ${apiUrl}`;
+                        statusEl.classList.add('connected');
+                        currentApiUrl = apiUrl;
+                        
+                        // Fetch stats
+                        fetchStats();
+                        break;
+                    }
+                } catch (e) {
+                    console.log(`${apiUrl} not reachable`);
+                }
+            }
+            
+            if (!currentApiUrl) {
+                statusEl.innerHTML = '❌ No server connection. Start your backend.';
+                statusEl.classList.add('disconnected');
+            }
+            
+            // Set initial amount
+            updateAmount();
+        };
+
+        // Clean up interval when page unloads
+        window.onbeforeunload = function() {
+            if (paymentCheckInterval) {
+                clearInterval(paymentCheckInterval);
+            }
+        };
+
+        // Format phone number as user types
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let phone = e.target.value.replace(/\D/g, '');
+            if (phone.length > 0 && !phone.startsWith('254')) {
+                if (phone.startsWith('0')) {
+                    phone = '254' + phone.substring(1);
+                } else if (phone.startsWith('7')) {
+                    phone = '254' + phone;
+                }
+            }
+            e.target.value = phone;
+        });
+    </script>
+</body>
+</html>

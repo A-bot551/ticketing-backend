@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple MPesa Test</title>
+</head>
+<body>
+    <h2>Simple MPesa Test</h2>
+    <input type="text" id="phone" value="254708374149" placeholder="Phone">
+    <input type="number" id="amount" value="1" placeholder="Amount">
+    <button onclick="testPayment()">Test Payment</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testPayment() {
+            const result = document.getElementById('result');
+            result.textContent = 'Sending request...';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/pay', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone: document.getElementById('phone').value,
+                        amount: document.getElementById('amount').value,
+                        eventId: 'test123'
+                    })
+                });
+                
+                const data = await response.json();
+                result.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
