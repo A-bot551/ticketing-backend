@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M-Pesa Ticket Payment</title>
+    <title>M-Pesa Ticket Payment - Tech Conference 2026</title>
     <style>
         * {
             margin: 0;
@@ -39,7 +39,7 @@
         }
         
         .event-info {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 20px;
             border-radius: 10px;
@@ -305,6 +305,22 @@
             border-radius: 8px;
             font-size: 14px;
         }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -335,6 +351,11 @@
             <div class="form-group">
                 <label>📧 Email (for e-ticket)</label>
                 <input type="email" id="email" value="customer@example.com" placeholder="your@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label>👤 Full Name (optional)</label>
+                <input type="text" id="name" value="John Doe" placeholder="Your full name">
             </div>
             
             <button onclick="payWithMpesa()" id="payBtn">
@@ -375,21 +396,28 @@
             </div>
             
             <div style="text-align: center; margin-top: 20px;">
-                <button onclick="window.print()" style="width: auto; padding: 10px 20px; background: #6c757d;">
+                <button onclick="window.print()" style="width: auto; padding: 10px 20px; background: #6c757d; display: inline-block; margin-right: 10px;">
                     🖨️ Print Ticket
                 </button>
-                <button onclick="downloadTicket()" style="width: auto; padding: 10px 20px; background: #17a2b8; margin-top: 10px;">
+                <button onclick="downloadTicket()" style="width: auto; padding: 10px 20px; background: #17a2b8; display: inline-block;">
                     📥 Download
                 </button>
             </div>
         </div>
+
+        <div class="footer">
+            <p>Powered by <a href="https://ticketing-backend-tvoz.onrender.com" target="_blank">Ticketing System</a> | Secure M-Pesa Payments</p>
+        </div>
     </div>
 
     <script>
-        // API Configuration
+        // ============================================
+        // API CONFIGURATION - UPDATED WITH LIVE URL
+        // ============================================
         const API_URLS = [
-            'http://localhost:3000',
-            'https://aerolitic-madge-kernelly.ngrok-free.dev'
+            'https://ticketing-backend-tvoz.onrender.com',  // LIVE Render URL
+            'http://localhost:3000',                         // Local development
+            'https://aerolitic-madge-kernelly.ngrok-free.dev' // ngrok fallback
         ];
         
         let currentApiUrl = API_URLS[0];
@@ -397,10 +425,13 @@
         let currentCheckoutId = null;
         let currentReference = null;
 
+        // Ticket price per unit
+        const TICKET_PRICE = 2500;
+
         // Update amount based on tickets
         function updateAmount() {
-            const tickets = document.getElementById('tickets').value;
-            const amount = tickets * 2500;
+            const tickets = parseInt(document.getElementById('tickets').value) || 1;
+            const amount = tickets * TICKET_PRICE;
             document.getElementById('amountDisplay').textContent = `KES ${amount.toLocaleString()}`;
         }
 
@@ -468,6 +499,9 @@
                             // Update stats
                             fetchStats();
                             
+                            // Enable pay button
+                            document.getElementById('payBtn').disabled = false;
+                            
                         } else if (data.status === 'failed') {
                             clearInterval(paymentCheckInterval);
                             setProgress(false);
@@ -501,12 +535,17 @@
             const ticketDetails = document.getElementById('ticketDetails');
             const phone = document.getElementById('phone').value;
             const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
             const tickets = document.getElementById('tickets').value;
             
             ticketDetails.innerHTML = `
                 <div class="detail-item">
                     <div class="detail-label">Event</div>
                     <div class="detail-value">Tech Conference 2026</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Attendee</div>
+                    <div class="detail-value">${name}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Date</div>
@@ -517,8 +556,8 @@
                     <div class="detail-value">${tickets} Ticket(s)</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Amount</div>
-                    <div class="detail-value">KES ${(tickets * 2500).toLocaleString()}</div>
+                    <div class="detail-label">Amount Paid</div>
+                    <div class="detail-value">KES ${(tickets * TICKET_PRICE).toLocaleString()}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Receipt No.</div>
@@ -535,6 +574,10 @@
                 <div class="detail-item">
                     <div class="detail-label">Email</div>
                     <div class="detail-value">${email}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Purchase Date</div>
+                    <div class="detail-value">${new Date().toLocaleDateString()}</div>
                 </div>
             `;
             
@@ -564,30 +607,36 @@
 
         // Download ticket as text file
         function downloadTicket() {
+            const name = document.getElementById('name').value;
             const phone = document.getElementById('phone').value;
             const email = document.getElementById('email').value;
             const tickets = document.getElementById('tickets').value;
-            const receipt = document.querySelector('#ticketDetails .detail-item:nth-child(5) .detail-value')?.textContent || 'N/A';
+            const receipt = document.querySelector('#ticketDetails .detail-item:nth-child(6) .detail-value')?.textContent || 'N/A';
             
             const ticketText = `
-TECH CONFERENCE 2026 - E-TICKET
-================================
-Event: Tech Conference 2026
-Date: March 15-16, 2026
-Venue: KICC, Nairobi
-
-TICKET DETAILS
---------------------------------
-Tickets: ${tickets}
-Amount: KES ${(tickets * 2500).toLocaleString()}
-Receipt: ${receipt}
-Phone: ${phone}
-Email: ${email}
-
-Please present this ticket at the entrance.
-QR Code will be scanned for verification.
-
-Thank you for your purchase!
+╔════════════════════════════════════╗
+║    TECH CONFERENCE 2026 - E-TICKET  ║
+╠════════════════════════════════════╣
+║                                    ║
+║  Event: Tech Conference 2026       ║
+║  Date: March 15-16, 2026           ║
+║  Venue: KICC, Nairobi              ║
+║                                    ║
+║  TICKET DETAILS                    ║
+║  ---------------------------------  ║
+║  Attendee: ${name.padEnd(20)}  ║
+║  Tickets: ${tickets.padEnd(22)}  ║
+║  Amount: KES ${(tickets * TICKET_PRICE).toLocaleString().padEnd(15)}  ║
+║  Receipt: ${receipt.padEnd(21)}  ║
+║  Phone: ${phone.padEnd(23)}  ║
+║  Email: ${email.padEnd(23)}  ║
+║                                    ║
+║  Please present this ticket        ║
+║  at the entrance for scanning.     ║
+║                                    ║
+║  Thank you for your purchase!      ║
+║                                    ║
+╚════════════════════════════════════╝
             `;
             
             const blob = new Blob([ticketText], { type: 'text/plain' });
@@ -596,6 +645,7 @@ Thank you for your purchase!
             a.href = url;
             a.download = `ticket-${receipt}.txt`;
             a.click();
+            window.URL.revokeObjectURL(url);
         }
 
         // Pay with M-Pesa
@@ -604,13 +654,22 @@ Thank you for your purchase!
             payBtn.disabled = true;
             
             const phone = document.getElementById('phone').value;
-            const tickets = document.getElementById('tickets').value;
-            const amount = tickets * 2500;
+            const tickets = parseInt(document.getElementById('tickets').value) || 1;
+            const amount = tickets * TICKET_PRICE;
             const eventId = 'tech-conf-2026';
+            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
             
             // Validate phone
             if (!phone.match(/^254\d{9}$/)) {
                 showStatus('❌ Invalid phone number. Use format: 254XXXXXXXXX', 'error');
+                payBtn.disabled = false;
+                return;
+            }
+            
+            // Validate email
+            if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                showStatus('❌ Invalid email address', 'error');
                 payBtn.disabled = false;
                 return;
             }
@@ -633,7 +692,10 @@ Thank you for your purchase!
                         body: JSON.stringify({
                             phone: phone,
                             amount: amount.toString(),
-                            eventId: eventId
+                            eventId: eventId,
+                            email: email,
+                            name: name,
+                            tickets: tickets
                         })
                     });
                     
@@ -669,6 +731,7 @@ Thank you for your purchase!
                     
                 } catch (error) {
                     console.log(`Failed with ${apiUrl}:`, error.message);
+                    showStatus(`⚠️ Failed with ${apiUrl}, trying next...`, 'loading');
                 }
             }
             
@@ -680,15 +743,18 @@ Thank you for your purchase!
         // Test connection on page load
         window.onload = async function() {
             const statusEl = document.getElementById('connectionStatus');
+            let connected = false;
             
             for (const apiUrl of API_URLS) {
                 try {
-                    const response = await fetch(apiUrl);
+                    const response = await fetch(apiUrl, { mode: 'cors' });
                     if (response.ok) {
                         const data = await response.json();
-                        statusEl.innerHTML = `✅ Connected to ${apiUrl}`;
+                        statusEl.innerHTML = `✅ Connected to ${apiUrl} (${data.message || 'API running'})`;
                         statusEl.classList.add('connected');
+                        statusEl.classList.remove('disconnected');
                         currentApiUrl = apiUrl;
+                        connected = true;
                         
                         // Fetch stats
                         fetchStats();
@@ -699,9 +765,10 @@ Thank you for your purchase!
                 }
             }
             
-            if (!currentApiUrl) {
-                statusEl.innerHTML = '❌ No server connection. Start your backend.';
+            if (!connected) {
+                statusEl.innerHTML = '❌ No server connection. Start your backend or check Render URL.';
                 statusEl.classList.add('disconnected');
+                statusEl.classList.remove('connected');
             }
             
             // Set initial amount
@@ -726,6 +793,14 @@ Thank you for your purchase!
                 }
             }
             e.target.value = phone;
+        });
+
+        // Validate tickets input
+        document.getElementById('tickets').addEventListener('input', function(e) {
+            let value = parseInt(e.target.value);
+            if (value < 1) e.target.value = 1;
+            if (value > 10) e.target.value = 10;
+            updateAmount();
         });
     </script>
 </body>
