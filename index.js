@@ -38,7 +38,7 @@ const corsOptions = {
     origin: [
         'http://localhost:3000', 
         'https://ticketing-backend-tvoz.onrender.com',
-        'https://elaborate-kangaroo-f62471.netlify.app' // ← REPLACE WITH YOUR ACTUAL NETLIFY URL
+        'https://elaborate-kangaroo-f62471.netlify.app'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -120,7 +120,7 @@ app.get("/", (req, res) => {
             qrCodes: true,
             adminDashboard: true,
             userAccounts: true,
-            sms: false // Set to true when SMS is configured
+            sms: false
         },
         endpoints: {
             home: "GET /",
@@ -764,7 +764,7 @@ app.get("/api/admin/transactions", requireAdmin, async (req, res) => {
 });
 
 // ============================================
-// USER AUTHENTICATION ENDPOINTS
+// USER AUTHENTICATION ENDPOINTS - UPDATED WITH AUTO-VERIFY
 // ============================================
 app.post("/api/auth/register", async (req, res) => {
     try {
@@ -782,16 +782,17 @@ app.post("/api/auth/register", async (req, res) => {
             email,
             phone,
             password,
-            verificationToken
+            verificationToken,
+            verified: true // 👈 AUTO-VERIFY USERS FOR TESTING
         });
         
         await user.save();
         
-        console.log(`Verification token for ${email}: ${verificationToken}`);
+        console.log(`✅ User registered and auto-verified: ${email}`);
         
         res.json({ 
             success: true, 
-            message: "Registration successful. Please verify your email." 
+            message: "Registration successful! You can now login." 
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -807,6 +808,8 @@ app.post("/api/auth/login", async (req, res) => {
             return res.status(401).json({ error: "Invalid credentials" });
         }
         
+        // Verification check is now optional since we auto-verify
+        // But keeping it for future use
         if (!user.verified) {
             return res.status(401).json({ error: "Please verify your email first" });
         }
@@ -814,6 +817,8 @@ app.post("/api/auth/login", async (req, res) => {
         const token = crypto.randomBytes(32).toString('hex');
         user.lastLogin = new Date();
         await user.save();
+        
+        console.log(`✅ User logged in: ${email}`);
         
         res.json({ 
             success: true, 
