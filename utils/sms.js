@@ -8,7 +8,7 @@ const sms = africastalking.SMS;
 
 const sendTicketSMS = async (phone, ticketData) => {
     try {
-        // Format phone number (remove 0 and ensure country code)
+        // Format phone number
         let formattedPhone = phone;
         if (phone.startsWith('0')) {
             formattedPhone = '254' + phone.substring(1);
@@ -27,7 +27,7 @@ const sendTicketSMS = async (phone, ticketData) => {
         const response = await sms.send({
             to: [formattedPhone],
             message: message,
-            from: 'TicketApp' // Optional
+            from: 'TicketMaster'
         });
         
         console.log('✅ SMS sent:', response);
@@ -44,7 +44,7 @@ const testSMS = async () => {
         const response = await sms.send({
             to: ['254708374149'],
             message: 'Test message from TicketMaster',
-            from: 'TicketApp'
+            from: 'TicketMaster'
         });
         console.log('✅ SMS test successful:', response);
         return true;

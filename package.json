@@ -20,7 +20,8 @@
     "mongodb": "^7.1.0",
     "mongoose": "^7.8.9",
     "nodemailer": "^8.0.1",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "twilio": "^5.12.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

@@ -38,7 +38,7 @@ const corsOptions = {
     origin: [
         'http://localhost:3000', 
         'https://ticketing-backend-tvoz.onrender.com',
-        'https://elaborate-kangaroo-f62471.netlify.app'
+        'https://celadon-marigold-81c640.netlify.app'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
