@@ -24,15 +24,22 @@ const app = express();
 // ============================================
 // MONGODB CONNECTION
 // ============================================
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ Connected to MongoDB'))
-    .catch(err => console.error('❌ MongoDB connection error:', err));
+mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 30000,
+    socketTimeoutMS: 45000,
+})
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
 
 // ============================================
 // MIDDLEWARE
 // ============================================
 const corsOptions = {
-    origin: ['http://localhost:3000', 'https://your-site-name.netlify.app'],
+    origin: [
+        'http://localhost:3000', 
+        'https://ticketing-backend-tvoz.onrender.com',
+        'https://elaborate-kangaroo-f62471.netlify.app' // ← REPLACE WITH YOUR ACTUAL NETLIFY URL
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true,
@@ -132,6 +139,73 @@ app.get("/", (req, res) => {
             user: "POST /api/auth/register"
         }
     });
+});
+
+// ============================================
+// TEMPORARY SEED ENDPOINT - REMOVE AFTER USE
+// ============================================
+app.get("/api/seed-events", async (req, res) => {
+    try {
+        const count = await Event.countDocuments();
+        if (count === 0) {
+            const events = [
+                {
+                    name: "Tech Conference 2026",
+                    description: "The biggest tech conference in East Africa featuring keynote speakers from Google, Microsoft, and Safaricom.",
+                    shortDescription: "East Africa's premier tech conference",
+                    date: new Date("2026-03-15T09:00:00.000Z"),
+                    endDate: new Date("2026-03-16T18:00:00.000Z"),
+                    venue: "KICC",
+                    address: "Harambe Avenue",
+                    city: "Nairobi",
+                    price: 2500,
+                    capacity: 500,
+                    ticketsSold: 0,
+                    status: 'active',
+                    featured: true,
+                    category: "Conference"
+                },
+                {
+                    name: "Startup Pitch Night",
+                    description: "Watch 10 innovative startups pitch to top investors. Network with founders, VCs, and angel investors.",
+                    shortDescription: "Where startups meet investors",
+                    date: new Date("2026-04-10T17:00:00.000Z"),
+                    endDate: new Date("2026-04-10T21:00:00.000Z"),
+                    venue: "iHub",
+                    address: "Senteu Plaza",
+                    city: "Nairobi",
+                    price: 1000,
+                    capacity: 200,
+                    ticketsSold: 0,
+                    status: 'active',
+                    featured: true,
+                    category: "Networking"
+                },
+                {
+                    name: "Mobile Development Workshop",
+                    description: "Hands-on workshop building Android and iOS apps with Kotlin and Swift. Bring your laptop!",
+                    shortDescription: "Learn mobile development",
+                    date: new Date("2026-05-05T09:00:00.000Z"),
+                    endDate: new Date("2026-05-07T17:00:00.000Z"),
+                    venue: "Moringa School",
+                    city: "Nairobi",
+                    price: 5000,
+                    capacity: 50,
+                    ticketsSold: 0,
+                    status: 'active',
+                    featured: false,
+                    category: "Workshop"
+                }
+            ];
+            
+            await Event.insertMany(events);
+            res.json({ success: true, message: "Events seeded successfully!", count: events.length });
+        } else {
+            res.json({ success: true, message: "Events already exist", count });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // ============================================
