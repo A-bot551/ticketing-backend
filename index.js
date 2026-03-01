@@ -38,7 +38,7 @@ const corsOptions = {
     origin: [
         'http://localhost:3000', 
         'https://ticketing-backend-tvoz.onrender.com',
-        'https://cozy-beijinho-b4aff8.netlify.app'
+        'https://spectacular-rabanadas-32313a.netlify.app'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
