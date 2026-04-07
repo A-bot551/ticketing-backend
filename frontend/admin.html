@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketMaster Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --gradient: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f6f9;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100%;
+            background: var(--dark);
+            color: white;
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h3 {
+            font-size: 20px;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: rgba(102, 126, 234, 0.2);
+            color: white;
+            border-left: 3px solid var(--primary);
+        }
+
+        .menu-icon {
+            font-size: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 20px;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logout-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-title {
+            color: var(--gray);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        /* Tables */
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: var(--light);
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Forms */
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--gray);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                left: -260px;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>🎫 TicketMaster</h3>
+            <p style="font-size: 12px; margin-top: 5px;">Admin Dashboard</p>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-item active" data-section="dashboard">
+                <span class="menu-icon">📊</span>
+                <span>Dashboard</span>
+            </div>
+            <div class="menu-item" data-section="events">
+                <span class="menu-icon">🎪</span>
+                <span>Events</span>
+            </div>
+            <div class="menu-item" data-section="transactions">
+                <span class="menu-icon">💰</span>
+                <span>Transactions</span>
+            </div>
+            <div class="menu-item" data-section="tickets">
+                <span class="menu-icon">🎟️</span>
+                <span>Scan Tickets</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title" id="pageTitle">Dashboard</div>
+            <div class="admin-info">
+                <span>👤 Admin</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Total Sales</div>
+                    <div class="stat-value" id="totalSales">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Revenue</div>
+                    <div class="stat-value" id="totalRevenue">KES 0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Active Events</div>
+                    <div class="stat-value" id="activeEvents">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Total Tickets Sold</div>
+                    <div class="stat-value" id="ticketsSold">0</div>
+                </div>
+            </div>
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Recent Transactions</h3>
+                </div>
+                <table id="recentTransactions">
+                    <thead><tr><th>Reference</th><th>Event</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                    <tbody><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Events Section -->
+        <div id="eventsSection" style="display: none;">
+            <div class="form-card">
+                <h3 style="margin-bottom: 20px;">➕ Add New Event</h3>
+                <div class="form-group"><label>Event Name</label><input type="text" id="eventName" placeholder="Sauti Sol Concert"></div>
+                <div class="form-group"><label>Description</label><textarea id="eventDesc" rows="2" placeholder="Event description..."></textarea></div>
+                <div class="form-group"><label>Date & Time</label><input type="datetime-local" id="eventDate"></div>
+                <div class="form-group"><label>Venue</label><input type="text" id="eventVenue" placeholder="KICC, Nairobi"></div>
+                <div class="form-group"><label>Price (KES)</label><input type="number" id="eventPrice" placeholder="3500"></div>
+                <div class="form-group"><label>Capacity</label><input type="number" id="eventCapacity" placeholder="500"></div>
+                <div class="form-group"><label>Category</label>
+                    <select id="eventCategory"><option>Concert</option><option>Tech</option><option>Business</option><option>Music</option><option>Food</option><option>Party</option></select>
+                </div>
+                <button class="btn-primary" onclick="createEvent()">✨ Create Event</button>
+            </div>
+            <div class="table-container">
+                <h3 style="margin-bottom: 20px;">📋 All Events</h3>
+                <table id="eventsTable">
+                    <thead><tr><th>Name</th><th>Date</th><th>Price</th><th>Sold/Cap</th><th>Actions</th></tr></thead>
+                    <tbody><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transactions Section -->
+        <div id="transactionsSection" style="display: none;">
+            <div class="table-container">
+                <h3 style="margin-bottom: 20px;">💰 All Transactions</h3>
+                <table id="transactionsTable">
+                    <thead><tr><th>Reference</th><th>Customer</th><th>Event</th><th>Tickets</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                    <tbody><tr><td colspan="7" class="loading">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Scan Tickets Section -->
+        <div id="ticketsSection" style="display: none;">
+            <div class="form-card">
+                <h3>🔍 Scan QR Code / Validate Ticket</h3>
+                <div class="form-group"><label>Enter Receipt Number</label><input type="text" id="scanInput" placeholder="Receipt number..."></div>
+                <button class="btn-primary" onclick="validateTicket()">Validate Ticket</button>
+                <div id="scanResult" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://ticketing-backend-tvoz.onrender.com';
+        
+        // Admin authentication
+        if (!localStorage.getItem('adminAuth')) {
+            const password = prompt('Enter Admin Password:');
+            if (password === 'Admin123!') {
+                localStorage.setItem('adminAuth', 'true');
+            } else {
+                alert('Invalid password');
+                window.location.href = '/';
+            }
+        }
+
+        // Sidebar navigation
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const section = this.dataset.section;
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('[id$="Section"]').forEach(sec => sec.style.display = 'none');
+                document.getElementById(`${section}Section`).style.display = 'block';
+                
+                const titles = {dashboard:'Dashboard', events:'Events', transactions:'Transactions', tickets:'Scan Tickets'};
+                document.getElementById('pageTitle').innerText = titles[section];
+                
+                if (section === 'dashboard') loadDashboard();
+                if (section === 'events') loadEvents();
+                if (section === 'transactions') loadTransactions();
+            });
+        });
+
+        async function loadDashboard() {
+            try {
+                const statsRes = await fetch(`${API_URL}/api/stats`);
+                const stats = await statsRes.json();
+                document.getElementById('totalSales').innerText = stats.completed || 0;
+                document.getElementById('totalRevenue').innerText = `KES ${(stats.totalAmount || 0).toLocaleString()}`;
+                
+                const eventsRes = await fetch(`${API_URL}/api/events`);
+                const events = await eventsRes.json();
+                document.getElementById('activeEvents').innerText = events.events?.length || 0;
+                
+                let totalTickets = 0;
+                events.events?.forEach(e => totalTickets += e.ticketsSold || 0);
+                document.getElementById('ticketsSold').innerText = totalTickets;
+                
+                const transRes = await fetch(`${API_URL}/api/transactions`);
+                const trans = await transRes.json();
+                const tbody = document.querySelector('#recentTransactions tbody');
+                tbody.innerHTML = '';
+                (trans.transactions || []).slice(0,5).forEach(t => {
+                    tbody.innerHTML += `<tr><td>${t.reference || 'N/A'}</td><td>${t.eventId?.name || 'Event'}</td><td>KES ${t.amount}</td><td><span class="status-badge status-${t.status}">${t.status}</span></td><td>${new Date(t.createdAt).toLocaleDateString()}</td></tr>`;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadEvents() {
+            try {
+                const res = await fetch(`${API_URL}/api/events`);
+                const data = await res.json();
+                const tbody = document.querySelector('#eventsTable tbody');
+                tbody.innerHTML = '';
+                (data.events || []).forEach(e => {
+                    tbody.innerHTML += `<tr><td>${e.name}</td><td>${new Date(e.date).toLocaleDateString()}</td><td>KES ${e.price}</td><td>${e.ticketsSold || 0}/${e.capacity}</td><td><button class="btn-danger" onclick="deleteEvent('${e._id}')">Delete</button></td></tr>`;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadTransactions() {
+            try {
+                const res = await fetch(`${API_URL}/api/transactions`);
+                const data = await res.json();
+                const tbody = document.querySelector('#transactionsTable tbody');
+                tbody.innerHTML = '';
+                (data.transactions || []).forEach(t => {
+                    tbody.innerHTML += `<tr><td>${t.reference || 'N/A'}</td><td>${t.name || 'N/A'}</td><td>${t.eventId?.name || 'Event'}</td><td>${t.tickets}</td><td>KES ${t.amount}</td><td><span class="status-badge status-${t.status}">${t.status}</span></td><td>${new Date(t.createdAt).toLocaleDateString()}</td></tr>`;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function createEvent() {
+            const event = {
+                name: document.getElementById('eventName').value,
+                description: document.getElementById('eventDesc').value,
+                date: new Date(document.getElementById('eventDate').value).toISOString(),
+                venue: document.getElementById('eventVenue').value,
+                price: parseInt(document.getElementById('eventPrice').value),
+                capacity: parseInt(document.getElementById('eventCapacity').value),
+                category: document.getElementById('eventCategory').value,
+                status: 'active'
+            };
+            if (!event.name || !event.date || !event.price) { alert('Please fill required fields'); return; }
+            try {
+                const res = await fetch(`${API_URL}/api/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(event) });
+                if (res.ok) { alert('✅ Event created!'); loadEvents(); }
+                else { alert('❌ Failed to create event'); }
+            } catch(e) { alert('Error creating event'); }
+        }
+
+        async function deleteEvent(id) {
+            if (confirm('⚠️ Delete this event? This cannot be undone.')) {
+                await fetch(`${API_URL}/api/events/${id}`, { method: 'DELETE' });
+                loadEvents();
+            }
+        }
+
+        async function validateTicket() {
+            const receipt = document.getElementById('scanInput').value.trim();
+            if (!receipt) { alert('Please enter a receipt number'); return; }
+            try {
+                const res = await fetch(`${API_URL}/api/validate-ticket/${receipt}`);
+                const data = await res.json();
+                document.getElementById('scanResult').innerHTML = data.valid ? 
+                    `<div style="background:#d4edda;padding:15px;border-radius:5px;border-left:4px solid #28a745;"><strong>✅ VALID TICKET!</strong><br>Event: ${data.ticket.event}<br>Name: ${data.ticket.name}<br>Tickets: ${data.ticket.tickets}</div>` :
+                    `<div style="background:#f8d7da;padding:15px;border-radius:5px;border-left:4px solid #dc3545;"><strong>❌ INVALID TICKET!</strong><br>${data.error}</div>`;
+            } catch(e) { alert('Error validating ticket'); }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminAuth');
+            location.reload();
+        }
+
+        // Load dashboard by default
+        loadDashboard();
+    </script>
+</body>
+</html>

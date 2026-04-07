@@ -3,160 +3,416 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎫 TicketMaster - Buy Event Tickets</title>
+    <title>TicketMaster Kenya | Buy Event Tickets Online</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --gradient: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--gradient);
             min-height: 100vh;
         }
-        
+
+        /* Navbar */
         .navbar {
             background: white;
             padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        
+
         .nav-container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
-        
+
         .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
+            font-size: 28px;
+            font-weight: 800;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
         }
-        
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
         .nav-links a {
-            margin-left: 20px;
             text-decoration: none;
-            color: #333;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 20px;
+
+        .nav-links a:hover {
+            color: var(--primary);
         }
-        
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--light);
+            padding: 8px 15px;
+            border-radius: 40px;
+        }
+
+        .user-name {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .admin-badge {
+            background: var(--danger);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        .logout-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        /* Hero Section */
         .hero {
             background: white;
             border-radius: 15px;
-            padding: 3rem;
+            padding: 2rem;
             text-align: center;
-            margin-bottom: 2rem;
+            margin: 1.5rem auto;
+            max-width: 1200px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
-        
+
         .hero h1 {
-            font-size: 48px;
-            color: #333;
-            margin-bottom: 1rem;
+            font-size: 42px;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
         }
-        
+
         .hero p {
             font-size: 18px;
             color: #666;
-            margin-bottom: 2rem;
         }
-        
-        .search-bar {
+
+        /* Admin Panel */
+        .admin-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 1200px;
+            display: none;
+        }
+
+        .admin-panel.show {
+            display: block;
+        }
+
+        .admin-header {
             display: flex;
-            max-width: 500px;
-            margin: 0 auto;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light);
         }
-        
-        .search-bar input {
-            flex: 1;
-            padding: 12px;
+
+        .admin-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .add-event-form {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px 0 0 8px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 14px;
         }
-        
-        .search-bar button {
-            padding: 12px 24px;
-            background: #667eea;
+
+        .btn-primary {
+            background: var(--gradient);
             color: white;
             border: none;
-            border-radius: 0 8px 8px 0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Search & Categories */
+        .search-container {
+            max-width: 1200px;
+            margin: 0 auto 30px;
+            padding: 0 20px;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 60px;
+            padding: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            font-size: 16px;
+            background: transparent;
+        }
+
+        .search-input:focus {
+            outline: none;
+        }
+
+        .search-btn {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 40px;
+            font-weight: 600;
             cursor: pointer;
         }
-        
+
+        .categories {
+            max-width: 1200px;
+            margin: 0 auto 30px;
+            padding: 0 20px;
+        }
+
+        .categories h2 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .category-card {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .category-card:hover {
+            transform: translateY(-3px);
+            background: var(--gradient);
+            color: white;
+        }
+
+        /* Events Grid */
+        .events-section {
+            max-width: 1200px;
+            margin: 0 auto 60px;
+            padding: 0 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+
         .events-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
         }
-        
+
         .event-card {
             background: white;
-            border-radius: 10px;
+            border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            transition: all 0.3s;
+            position: relative;
         }
-        
+
         .event-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
         }
-        
+
+        .event-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--gradient);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 2;
+        }
+
         .event-image {
-            height: 150px;
+            height: 140px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 48px;
+            font-size: 40px;
         }
-        
+
         .event-details {
-            padding: 20px;
+            padding: 15px;
         }
-        
+
         .event-name {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--dark);
         }
-        
+
         .event-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
             color: #666;
-            font-size: 14px;
-            margin-bottom: 5px;
+            font-size: 12px;
         }
-        
+
         .event-price {
-            font-size: 24px;
-            color: #28a745;
-            font-weight: bold;
-            margin: 15px 0;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--success);
+            margin: 10px 0;
         }
-        
-        .btn {
-            width: 100%;
-            padding: 10px;
-            background: #667eea;
+
+        .tickets-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px 0;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .tickets-left {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .event-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .btn-buy {
+            background: var(--gradient);
             color: white;
             border: none;
-            border-radius: 5px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 13px;
         }
-        
+
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -167,220 +423,548 @@
             background: rgba(0,0,0,0.5);
             align-items: center;
             justify-content: center;
+            z-index: 2000;
         }
-        
+
         .modal.active {
             display: flex;
         }
-        
+
         .modal-content {
             background: white;
-            padding: 30px;
-            border-radius: 10px;
-            max-width: 500px;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 450px;
             width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
         }
-        
-        .form-group {
-            margin-bottom: 15px;
+
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 1.5rem;
+            margin-top: 2rem;
         }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        
-        .ticket {
-            background: #f8f9fa;
-            border: 2px dashed #28a745;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
+
+        /* AI Chat */
+        .ai-chat {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 2000;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .ai-bubble {
+            background: var(--gradient);
+            color: white;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .ai-bubble:hover {
+            transform: scale(1.05);
+        }
+
+        .ai-window {
             display: none;
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 320px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
         }
-        
-        .ticket.show {
-            display: block;
+
+        .ai-header {
+            background: var(--gradient);
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        
+
+        .ai-close {
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .ai-messages {
+            height: 300px;
+            overflow-y: auto;
+            padding: 12px;
+            background: #f9f9f9;
+        }
+
+        .ai-message {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            max-width: 85%;
+            font-size: 13px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .ai-message.user {
+            background: var(--gradient);
+            color: white;
+            margin-left: auto;
+        }
+
+        .ai-input-area {
+            display: flex;
+            padding: 10px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        .ai-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 8px;
+            font-size: 13px;
+        }
+
+        .ai-send {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 32px;
-            }
+            .hero h1 { font-size: 28px; }
+            .nav-container { flex-direction: column; text-align: center; }
+            .events-grid { grid-template-columns: 1fr; }
+            .ai-window { width: 280px; right: -10px; }
         }
     </style>
 </head>
 <body>
+    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
-            <div class="logo">🎫 TicketMaster</div>
-            <div class="nav-links">
-                <a href="#events">Events</a>
-                <a href="#login">Login</a>
-                <a href="#register">Register</a>
-            </div>
+            <div class="logo" onclick="location.reload()">🎫 TicketMaster Kenya</div>
+            <div class="nav-links" id="navLinks"></div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="hero">
-            <h1>Discover Amazing Events</h1>
-            <p>Buy tickets for the best events in town with M-Pesa</p>
-            <div class="search-bar">
-                <input type="text" placeholder="Search events..." id="searchInput">
-                <button onclick="searchEvents()">Search</button>
-            </div>
-        </div>
-
-        <div id="events" class="events-grid"></div>
+    <!-- Hero Section -->
+    <div class="hero">
+        <h1>Discover Amazing Events in Kenya</h1>
+        <p>Buy tickets securely with M-Pesa • Instant QR tickets • Email confirmation</p>
     </div>
 
-    <!-- Payment Modal -->
-    <div class="modal" id="paymentModal">
-        <div class="modal-content">
-            <h2 style="margin-bottom: 20px;">Buy Tickets</h2>
-            <div id="selectedEvent"></div>
-            
-            <div class="form-group">
-                <label>Your Name</label>
-                <input type="text" id="buyerName" required>
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="admin-header">
+            <div class="admin-title">🛠️ Admin Controls - Manage Events</div>
+        </div>
+        <div class="add-event-form">
+            <h3 style="margin-bottom: 12px;">➕ Add New Event</h3>
+            <div class="form-row">
+                <div class="form-group"><label>Event Name</label><input type="text" id="newEventName" placeholder="Sauti Sol Concert"></div>
+                <div class="form-group"><label>Date & Time</label><input type="datetime-local" id="newEventDate"></div>
+                <div class="form-group"><label>Venue</label><input type="text" id="newEventVenue" placeholder="KICC, Nairobi"></div>
+                <div class="form-group"><label>Price (KES)</label><input type="number" id="newEventPrice" placeholder="3500"></div>
+                <div class="form-group"><label>Capacity</label><input type="number" id="newEventCapacity" placeholder="500"></div>
+                <div class="form-group"><label>Category</label>
+                    <select id="newEventCategory"><option>Concert</option><option>Tech</option><option>Business</option><option>Music</option><option>Food</option><option>Party</option></select>
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="buyerEmail" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Phone Number (254...)</label>
-                <input type="tel" id="buyerPhone" value="254" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Number of Tickets</label>
-                <input type="number" id="ticketCount" value="1" min="1" max="10">
-            </div>
-            
-            <div style="font-size: 20px; margin: 20px 0;">
-                Total: KES <span id="totalAmount">0</span>
-            </div>
-            
-            <button class="btn" onclick="processPayment()">Pay with M-Pesa</button>
-            <button class="btn" style="background: #6c757d; margin-top: 10px;" onclick="closeModal()">Cancel</button>
-            
-            <div id="paymentStatus" style="margin-top: 20px;"></div>
+            <div class="form-group"><label>Description</label><textarea id="newEventDesc" rows="2" placeholder="Event description..."></textarea></div>
+            <button class="btn-primary" onclick="createNewEvent()">✨ Create Event</button>
         </div>
     </div>
+
+    <!-- Search -->
+    <div class="search-container">
+        <div class="search-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search events..." onkeyup="searchEvents()">
+            <button class="search-btn" onclick="searchEvents()">🔍 Search</button>
+        </div>
+    </div>
+
+    <!-- Categories -->
+    <section class="categories">
+        <h2>Browse by Category</h2>
+        <div class="category-grid" id="categoryGrid"></div>
+    </section>
+
+    <!-- Events Grid -->
+    <section class="events-section">
+        <div class="section-header"><h2>🎉 Upcoming Events</h2><span id="eventCount"></span></div>
+        <div class="events-grid" id="eventsGrid"><div style="grid-column:1/-1;text-align:center;color:white;"><div class="loading-spinner"></div><p>Loading events...</p></div></div>
+    </section>
+
+    <!-- Modals -->
+    <div class="modal" id="paymentModal"><div class="modal-content"><h2>Complete Purchase</h2><div id="selectedEventInfo"></div>
+        <div class="form-group"><label>Your Name</label><input type="text" id="buyerName" required></div>
+        <div class="form-group"><label>Email</label><input type="email" id="buyerEmail" required></div>
+        <div class="form-group"><label>Phone (254...)</label><input type="tel" id="buyerPhone" value="254" required></div>
+        <div class="form-group"><label>Tickets</label><input type="number" id="ticketCount" value="1" min="1" max="10" onchange="updateTotal()"></div>
+        <div style="font-size:22px;margin:15px 0;">Total: KES <span id="totalAmount">0</span></div>
+        <button class="btn-primary" onclick="processPayment()" id="payButton">Pay with M-Pesa</button>
+        <button class="btn-primary" style="background:#6c757d;margin-top:8px;" onclick="closeModal()">Cancel</button>
+        <div id="paymentStatus"></div>
+    </div></div>
+
+    <div class="modal" id="loginModal"><div class="modal-content"><h2>Welcome Back</h2>
+        <div class="form-group"><label>Email</label><input type="email" id="loginEmail"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="loginPassword"></div>
+        <button class="btn-primary" onclick="login()">Login</button>
+        <button class="btn-primary" style="background:#6c757d;margin-top:8px;" onclick="closeLoginModal()">Cancel</button>
+        <div id="loginStatus"></div>
+    </div></div>
+
+    <div class="modal" id="registerModal"><div class="modal-content"><h2>Create Account</h2>
+        <div class="form-group"><label>Full Name</label><input type="text" id="regName"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="regEmail"></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="regPhone" value="254"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="regPassword"></div>
+        <button class="btn-primary" onclick="register()">Register</button>
+        <button class="btn-primary" style="background:#6c757d;margin-top:8px;" onclick="closeRegisterModal()">Cancel</button>
+        <div id="registerStatus"></div>
+    </div></div>
+
+    <div class="modal" id="ticketsModal"><div class="modal-content"><h2>My Tickets</h2><div id="userTickets"></div>
+        <button class="btn-primary" style="margin-top:15px;" onclick="closeTicketsModal()">Close</button>
+    </div></div>
+
+    <!-- AI Chat Assistant -->
+    <div class="ai-chat">
+        <div class="ai-bubble" onclick="toggleChat()">🤖</div>
+        <div class="ai-window" id="aiWindow">
+            <div class="ai-header"><span>🎫 TicketMaster AI</span><span class="ai-close" onclick="toggleChat()">✕</span></div>
+            <div class="ai-messages" id="aiMessages"></div>
+            <div class="ai-input-area"><input type="text" class="ai-input" id="aiInput" placeholder="Ask me anything..."><button class="ai-send" onclick="sendAIMessage()">➤</button></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer"><p>© 2026 TicketMaster Kenya • Secure M-Pesa Payments • Email Tickets with QR Codes</p></div>
 
     <script>
-        const API_URL = 'http://localhost:3000'; // Change to your Render URL later
+        // ============================================
+        // ✅ UPDATED: CORRECT RENDER URL
+        // ============================================
+        const API_URL = 'https://ticketing-backend-tvoz.onrender.com';
+        
+        let currentUser = null;
         let currentEvent = null;
+        let currentPrice = 0;
+        let allEvents = [];
+        let filteredEvents = [];
 
-        // Load events on page load
-        window.onload = async function() {
-            await loadEvents();
-        };
+        // Categories
+        const categories = ['All Events', 'Concert', 'Tech', 'Business', 'Music', 'Food', 'Party'];
 
-        async function loadEvents() {
-            try {
-                const response = await fetch(`${API_URL}/api/events`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    displayEvents(data.events);
-                }
-            } catch (error) {
-                console.error('Error loading events:', error);
-            }
-        }
+        // Initialize
+        window.onload = function() { displayCategories(); loadEventsFromBackend(); checkLoggedInUser(); initAIChat(); };
 
-        function displayEvents(events) {
-            const container = document.getElementById('events');
-            container.innerHTML = '';
-            
-            events.forEach(event => {
+        function displayCategories() {
+            const grid = document.getElementById('categoryGrid');
+            grid.innerHTML = '';
+            categories.forEach(cat => {
                 const card = document.createElement('div');
-                card.className = 'event-card';
-                card.innerHTML = `
-                    <div class="event-image">🎪</div>
-                    <div class="event-details">
-                        <div class="event-name">${event.name}</div>
-                        <div class="event-meta">📅 ${new Date(event.date).toLocaleDateString()}</div>
-                        <div class="event-meta">📍 ${event.venue}</div>
-                        <div class="event-price">KES ${event.price.toLocaleString()}</div>
-                        <button class="btn" onclick="openPaymentModal('${event._id}')">Buy Tickets</button>
-                    </div>
-                `;
-                container.appendChild(card);
+                card.className = 'category-card';
+                card.onclick = () => filterByCategory(cat);
+                card.innerHTML = cat === 'All Events' ? '🎫 All' : cat === 'Concert' ? '🎵 Concert' : cat === 'Tech' ? '💻 Tech' : cat === 'Business' ? '💼 Business' : cat === 'Music' ? '🎸 Music' : cat === 'Food' ? '🍕 Food' : '🎉 Party';
+                grid.appendChild(card);
             });
         }
 
-        function openPaymentModal(eventId) {
-            currentEvent = eventId;
-            document.getElementById('paymentModal').classList.add('active');
+        async function loadEventsFromBackend() {
+            try {
+                const response = await fetch(`${API_URL}/api/events`);
+                const data = await response.json();
+                if (data.success && data.events.length > 0) {
+                    allEvents = data.events;
+                    filteredEvents = allEvents;
+                    displayEvents(allEvents);
+                    document.getElementById('eventCount').textContent = `${allEvents.length} events`;
+                } else { showNoEvents(); }
+            } catch (error) { console.error('Error:', error); showNoEvents(); }
+        }
+
+        function showNoEvents() {
+            document.getElementById('eventsGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;color:white;padding:40px;"><div style="font-size:48px;">😢</div><h3>No events available</h3></div>`;
+        }
+
+        function displayEvents(events) {
+            const container = document.getElementById('eventsGrid');
+            if (events.length === 0) { container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:white;">No events match</div>'; return; }
+            container.innerHTML = '';
+            events.forEach(event => { container.appendChild(createEventCard(event)); });
+        }
+
+        function createEventCard(event) {
+            const card = document.createElement('div');
+            card.className = 'event-card';
+            const eventDate = new Date(event.date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+            const ticketsLeft = event.capacity - (event.ticketsSold || 0);
+            const isAdmin = currentUser?.email === 'admin@ticketmaster.com';
+            card.innerHTML = `
+                <div class="event-badge">${event.category || 'Event'}</div>
+                <div class="event-image">🎪</div>
+                <div class="event-details">
+                    <div class="event-name">${event.name}</div>
+                    <div class="event-meta">📅 ${eventDate}</div>
+                    <div class="event-meta">📍 ${event.venue}</div>
+                    <div class="event-price">KES ${event.price.toLocaleString()}</div>
+                    <div class="tickets-info"><span class="tickets-left">🎟️ ${ticketsLeft} left</span><span>✅ ${event.ticketsSold || 0} sold</span></div>
+                    <div class="event-footer"><button class="btn-buy" onclick="openPaymentModal('${event._id}', ${event.price}, '${event.name}')">Buy Tickets</button></div>
+                    ${isAdmin ? `<div class="admin-actions"><button class="btn-danger" onclick="deleteEvent('${event._id}')">🗑️ Delete</button></div>` : ''}
+                </div>
+            `;
+            return card;
+        }
+
+        async function deleteEvent(eventId) {
+            if (confirm('Delete this event?')) {
+                await fetch(`${API_URL}/api/events/${eventId}`, { method: 'DELETE' });
+                loadEventsFromBackend();
+                updateAIKnowledge();
+            }
+        }
+
+        async function createNewEvent() {
+            const event = {
+                name: document.getElementById('newEventName').value,
+                description: document.getElementById('newEventDesc').value,
+                date: new Date(document.getElementById('newEventDate').value).toISOString(),
+                venue: document.getElementById('newEventVenue').value,
+                price: parseInt(document.getElementById('newEventPrice').value),
+                capacity: parseInt(document.getElementById('newEventCapacity').value),
+                category: document.getElementById('newEventCategory').value,
+                status: 'active'
+            };
+            if (!event.name || !event.date || !event.price) { alert('Fill required fields'); return; }
+            await fetch(`${API_URL}/api/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(event) });
+            alert('Event created!');
+            document.getElementById('newEventName').value = '';
+            loadEventsFromBackend();
+            updateAIKnowledge();
+        }
+
+        function filterByCategory(category) {
+            if (category === 'All Events') { filteredEvents = allEvents; }
+            else { filteredEvents = allEvents.filter(e => e.category === category); }
+            displayEvents(filteredEvents);
+        }
+
+        function searchEvents() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            filteredEvents = allEvents.filter(e => e.name.toLowerCase().includes(term) || e.venue.toLowerCase().includes(term));
+            displayEvents(filteredEvents);
+        }
+
+        function openPaymentModal(eventId, price, name) {
+            if (!currentUser) { alert('Please login'); showLogin(); return; }
+            currentEvent = eventId; currentPrice = price;
+            document.getElementById('selectedEventInfo').innerHTML = `<strong>${name}</strong><br>KES ${price}/ticket`;
+            document.getElementById('buyerName').value = currentUser.name;
+            document.getElementById('buyerEmail').value = currentUser.email;
+            document.getElementById('ticketCount').value = 1;
             updateTotal();
+            document.getElementById('paymentModal').classList.add('active');
         }
 
-        function closeModal() {
-            document.getElementById('paymentModal').classList.remove('active');
-        }
-
-        function updateTotal() {
-            const count = document.getElementById('ticketCount').value;
-            // You'll need to get event price - simplified for now
-            document.getElementById('totalAmount').textContent = count * 2500;
-        }
+        function closeModal() { document.getElementById('paymentModal').classList.remove('active'); }
+        function updateTotal() { const count = document.getElementById('ticketCount').value; document.getElementById('totalAmount').textContent = (count * currentPrice).toLocaleString(); }
 
         async function processPayment() {
             const name = document.getElementById('buyerName').value;
             const email = document.getElementById('buyerEmail').value;
             const phone = document.getElementById('buyerPhone').value;
             const tickets = document.getElementById('ticketCount').value;
-            
+            const total = tickets * currentPrice;
+            const payButton = document.getElementById('payButton');
             const statusDiv = document.getElementById('paymentStatus');
-            statusDiv.innerHTML = '⏳ Processing...';
-            
+            if (!name || !email || !phone) { statusDiv.innerHTML = '❌ Fill all fields'; return; }
+            payButton.disabled = true;
+            statusDiv.innerHTML = '⏳ Sending...';
             try {
-                const response = await fetch(`${API_URL}/api/pay`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phone: phone,
-                        amount: (tickets * 2500).toString(),
-                        eventId: currentEvent,
-                        email: email,
-                        name: name,
-                        tickets: parseInt(tickets)
-                    })
-                });
-                
+                const response = await fetch(`${API_URL}/api/pay`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, amount: total.toString(), eventId: currentEvent, email, name, tickets: parseInt(tickets) }) });
                 const data = await response.json();
-                
-                if (data.success) {
-                    statusDiv.innerHTML = '✅ STK Push sent! Check your phone.';
-                    setTimeout(() => {
-                        closeModal();
-                        statusDiv.innerHTML = '';
-                    }, 3000);
-                } else {
-                    statusDiv.innerHTML = '❌ Error: ' + data.error;
-                }
-            } catch (error) {
-                statusDiv.innerHTML = '❌ Network error: ' + error.message;
+                if (data.success) { statusDiv.innerHTML = `✅ STK Push sent! Reference: ${data.reference}`; setTimeout(() => { closeModal(); payButton.disabled = false; }, 3000); }
+                else { statusDiv.innerHTML = '❌ Error'; payButton.disabled = false; }
+            } catch (error) { statusDiv.innerHTML = '❌ Network error'; payButton.disabled = false; }
+        }
+
+        function checkLoggedInUser() {
+            const savedUser = localStorage.getItem('user');
+            const navLinks = document.getElementById('navLinks');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                const isAdmin = currentUser.email === 'admin@ticketmaster.com';
+                navLinks.innerHTML = `<div class="user-menu"><span class="user-name">👤 ${currentUser.name}</span><a href="#" onclick="showMyTickets()">My Tickets</a><button class="logout-btn" onclick="logout()">Logout</button></div>`;
+                if (isAdmin) { document.getElementById('adminPanel').classList.add('show'); }
+            } else {
+                navLinks.innerHTML = `<a href="#" onclick="showLogin()">Login</a><a href="#" onclick="showRegister()">Register</a>`;
+                document.getElementById('adminPanel').classList.remove('show');
             }
         }
 
-        function searchEvents() {
-            // Implement search functionality
-            alert('Search feature coming soon!');
+        function showLogin() { document.getElementById('loginModal').classList.add('active'); }
+        function closeLoginModal() { document.getElementById('loginModal').classList.remove('active'); }
+        function showRegister() { document.getElementById('registerModal').classList.add('active'); }
+        function closeRegisterModal() { document.getElementById('registerModal').classList.remove('active'); }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const statusDiv = document.getElementById('loginStatus');
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+                const data = await response.json();
+                if (data.success) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    currentUser = data.user;
+                    statusDiv.innerHTML = '✅ Login successful!';
+                    setTimeout(() => { closeLoginModal(); checkLoggedInUser(); loadEventsFromBackend(); }, 1000);
+                } else { statusDiv.innerHTML = '❌ Login failed'; }
+            } catch (error) { statusDiv.innerHTML = '❌ Network error'; }
+        }
+
+        async function register() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const phone = document.getElementById('regPhone').value;
+            const password = document.getElementById('regPassword').value;
+            const statusDiv = document.getElementById('registerStatus');
+            try {
+                const response = await fetch(`${API_URL}/api/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, phone, password }) });
+                const data = await response.json();
+                if (data.success) { statusDiv.innerHTML = '✅ Registration successful!'; setTimeout(() => { closeRegisterModal(); showLogin(); }, 1500); }
+                else { statusDiv.innerHTML = '❌ Registration failed'; }
+            } catch (error) { statusDiv.innerHTML = '❌ Network error'; }
+        }
+
+        function logout() { localStorage.removeItem('user'); currentUser = null; checkLoggedInUser(); loadEventsFromBackend(); }
+
+        async function showMyTickets() {
+            if (!currentUser) return;
+            const modal = document.getElementById('ticketsModal');
+            const ticketsDiv = document.getElementById('userTickets');
+            ticketsDiv.innerHTML = '<div class="loading-spinner"></div>';
+            modal.classList.add('active');
+            try {
+                const response = await fetch(`${API_URL}/api/user/transactions?email=${currentUser.email}`);
+                const data = await response.json();
+                if (data.success && data.transactions.length > 0) {
+                    let html = '<div style="display:grid;gap:10px;">';
+                    data.transactions.forEach(t => { html += `<div style="background:#f8f9fa;padding:12px;border-radius:8px;"><strong>${t.eventId?.name || 'Event'}</strong><div>Tickets: ${t.tickets}</div><div>Amount: KES ${t.amount}</div>${t.receiptNumber ? `<div>Receipt: ${t.receiptNumber}</div>` : ''}</div>`; });
+                    html += '</div>';
+                    ticketsDiv.innerHTML = html;
+                } else { ticketsDiv.innerHTML = '<p>No tickets found</p>'; }
+            } catch (e) { ticketsDiv.innerHTML = '<p>Error loading tickets</p>'; }
+        }
+        function closeTicketsModal() { document.getElementById('ticketsModal').classList.remove('active'); }
+
+        // ========== SMART AI ASSISTANT ==========
+        let aiEventsData = [];
+
+        function initAIChat() {
+            const messages = document.getElementById('aiMessages');
+            messages.innerHTML = '<div class="ai-message">👋 Hi! I\'m your TicketMaster AI. I know all about our events, prices, and can help you buy tickets! Ask me anything!</div>';
+            updateAIKnowledge();
+        }
+
+        function updateAIKnowledge() {
+            aiEventsData = allEvents;
+        }
+
+        function toggleChat() {
+            const window = document.getElementById('aiWindow');
+            window.style.display = window.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('aiInput');
+            const message = input.value.trim();
+            if (!message) return;
+            const messages = document.getElementById('aiMessages');
+            messages.innerHTML += `<div class="ai-message user">${message}</div>`;
+            input.value = '';
+            setTimeout(() => {
+                let response = getAIResponse(message);
+                messages.innerHTML += `<div class="ai-message">🤖 ${response}</div>`;
+                messages.scrollTop = messages.scrollHeight;
+            }, 500);
+        }
+
+        function getAIResponse(question) {
+            const q = question.toLowerCase();
+            if (q.includes('hello') || q.includes('hi') || q.includes('hey')) {
+                return "Hello! Welcome to TicketMaster Kenya! 🎉 I can help you find events, check prices, or answer questions. What would you like to know?";
+            }
+            if (q.includes('event') || q.includes('concert') || q.includes('show') || q.includes('upcoming')) {
+                if (allEvents.length === 0) return "There are no events available at the moment. Please check back later!";
+                let eventList = "Here are our current events:\n\n";
+                allEvents.slice(0, 5).forEach(e => {
+                    const ticketsLeft = e.capacity - (e.ticketsSold || 0);
+                    eventList += `🎫 ${e.name}\n   📅 ${new Date(e.date).toLocaleDateString()}\n   📍 ${e.venue}\n   💰 KES ${e.price.toLocaleString()}\n   🎟️ ${ticketsLeft} tickets left\n\n`;
+                });
+                return eventList + "Which event interests you? I can give you more details!";
+            }
+            for (let event of allEvents) {
+                if (q.includes(event.name.toLowerCase())) {
+                    const ticketsLeft = event.capacity - (event.ticketsSold || 0);
+                    return `🎟️ ${event.name}\n📅 ${new Date(event.date).toLocaleDateString()}\n📍 ${event.venue}\n💰 KES ${event.price.toLocaleString()}\n🎟️ ${ticketsLeft} tickets remaining\n\nWould you like to buy tickets for this event?`;
+                }
+            }
+            if (q.includes('price') || q.includes('cost') || q.includes('how much')) {
+                if (allEvents.length === 0) return "No events available right now.";
+                let priceList = "Ticket prices:\n";
+                allEvents.forEach(e => { priceList += `• ${e.name}: KES ${e.price.toLocaleString()}\n`; });
+                return priceList;
+            }
+            if (q.includes('mpesa') || q.includes('pay') || q.includes('payment')) {
+                return "💳 Paying with M-Pesa is easy!\n\n1️⃣ Login to your account\n2️⃣ Choose an event\n3️⃣ Click 'Buy Tickets'\n4️⃣ Enter your M-Pesa number\n5️⃣ You'll receive an STK push\n6️⃣ Enter your PIN\n\nYou'll get your ticket via email instantly with a QR code!";
+            }
+            if (q.includes('my ticket') || q.includes('my tickets')) {
+                if (currentUser) { return `You have tickets! Click "My Tickets" in the menu to see all your purchases. Need help with anything else?`; }
+                else { return `You need to login first to see your tickets. Click "Login" in the top menu!`; }
+            }
+            if (q.includes('help') || q.includes('what can you do')) {
+                return "I can help you with:\n• Listing all events\n• Event details and prices\n• Ticket prices\n• M-Pesa payment instructions\n• Your tickets\n• Venue locations\n\nJust ask me anything!";
+            }
+            return "I can help you with events, prices, M-Pesa payments, or your tickets. What would you like to know?";
         }
     </script>
 </body>
