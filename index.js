@@ -39,7 +39,8 @@ const corsOptions = {
     origin: [
         'http://localhost:3000', 
         'https://ticketing-backend-tvoz.onrender.com',
-        'https://ticketmasterkenya.netlify.app'
+        'https://ticketmasterkenya.netlify.app',
+        'https://ticketeventsmaster.netlify.app'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
