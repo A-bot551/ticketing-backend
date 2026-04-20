@@ -646,7 +646,7 @@
     <div class="modal" id="loginModal"><div class="modal-content"><h2>Welcome Back</h2>
         <div class="form-group"><label>Email</label><input type="email" id="loginEmail"></div>
         <div class="form-group"><label>Password</label><input type="password" id="loginPassword"></div>
-        <button class="btn-primary" onclick="login()">Login</button>
+        <button class="btn-primary" onclick="adminLogin()">Login</button>
         <button class="btn-primary" style="background:#6c757d;margin-top:8px;" onclick="closeLoginModal()">Cancel</button>
         <div id="loginStatus"></div>
     </div></div>
@@ -680,9 +680,9 @@
 
     <script>
         // ============================================
-        // ✅ CORRECTED: Using localhost for local testing
+        // ✅ PRODUCTION: Using live backend URL
         // ============================================
-        const API_URL = 'http://localhost:3000';
+        const API_URL = 'https://ticketing-backend-tvoz.onrender.com';
         
         let currentUser = null;
         let currentEvent = null;
@@ -756,7 +756,10 @@
 
         async function deleteEvent(eventId) {
             if (confirm('Delete this event?')) {
-                await fetch(`${API_URL}/api/events/${eventId}`, { method: 'DELETE' });
+                await fetch(`${API_URL}/api/admin/events/${eventId}`, { 
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
                 loadEventsFromBackend();
                 updateAIKnowledge();
             }
@@ -774,11 +777,36 @@
                 status: 'active'
             };
             if (!event.name || !event.date || !event.price) { alert('Fill required fields'); return; }
-            await fetch(`${API_URL}/api/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(event) });
-            alert('Event created!');
-            document.getElementById('newEventName').value = '';
-            loadEventsFromBackend();
-            updateAIKnowledge();
+            
+            try {
+                const response = await fetch(`${API_URL}/api/admin/events`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(event)
+                });
+                
+                if (response.ok) {
+                    alert('✅ Event created successfully!');
+                    document.getElementById('newEventName').value = '';
+                    document.getElementById('newEventDesc').value = '';
+                    document.getElementById('newEventVenue').value = '';
+                    document.getElementById('newEventPrice').value = '';
+                    document.getElementById('newEventCapacity').value = '';
+                    loadEventsFromBackend();
+                } else if (response.status === 401) {
+                    alert('❌ Admin access required. Please login as admin.');
+                } else {
+                    const error = await response.json();
+                    alert('❌ Failed to create event: ' + (error.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Network error: ' + error.message);
+            }
         }
 
         function filterByCategory(category) {
@@ -845,7 +873,7 @@
         function showRegister() { document.getElementById('registerModal').classList.add('active'); }
         function closeRegisterModal() { document.getElementById('registerModal').classList.remove('active'); }
 
-        async function login() {
+        async function adminLogin() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             const statusDiv = document.getElementById('loginStatus');
@@ -860,21 +888,48 @@
             statusDiv.className = 'status-message status-loading';
             
             try {
+                // First, try admin login
+                const adminResponse = await fetch(`${API_URL}/api/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ username: email, password: password })
+                });
+                
+                if (adminResponse.ok) {
+                    const adminData = await adminResponse.json();
+                    localStorage.setItem('adminToken', adminData.token || 'loggedin');
+                    localStorage.setItem('user', JSON.stringify({ name: 'Administrator', email: email, isAdmin: true }));
+                    currentUser = { email: email, isAdmin: true };
+                    statusDiv.innerHTML = '✅ Admin login successful!';
+                    statusDiv.className = 'status-message status-success';
+                    setTimeout(() => {
+                        closeLoginModal();
+                        checkLoggedInUser();
+                        loadEventsFromBackend();
+                    }, 1500);
+                    return;
+                }
+            } catch (error) {
+                console.log('Admin login failed, trying regular login...');
+            }
+            
+            // Then try regular user login
+            try {
                 const response = await fetch(`${API_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ email, password })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    statusDiv.innerHTML = '✅ Login successful!';
-                    statusDiv.className = 'status-message status-success';
-                    
                     localStorage.setItem('user', JSON.stringify(data.user));
                     currentUser = data.user;
-                    
+                    statusDiv.innerHTML = '✅ Login successful!';
+                    statusDiv.className = 'status-message status-success';
                     setTimeout(() => {
                         closeLoginModal();
                         checkLoggedInUser();

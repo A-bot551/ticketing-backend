@@ -17,6 +17,7 @@
             --success: #28a745;
             --danger: #dc3545;
             --warning: #ffc107;
+            --info: #17a2b8;
             --dark: #1a1a2e;
             --light: #f8f9fa;
             --gray: #6c757d;
@@ -52,7 +53,6 @@
         .sidebar-header h3 {
             font-size: 20px;
             background: var(--gradient);
-            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -111,15 +111,6 @@
             gap: 15px;
         }
 
-        .admin-pass-input {
-            padding: 8px 12px;
-            border-radius: 5px;
-            border: 1px solid #e0e0e0;
-            background: #fff;
-            color: var(--dark);
-            width: 220px;
-        }
-
         .logout-btn {
             background: var(--danger);
             color: white;
@@ -127,6 +118,16 @@
             padding: 8px 20px;
             border-radius: 5px;
             cursor: pointer;
+        }
+
+        .back-to-site {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
         }
 
         /* Stats Cards */
@@ -176,6 +177,20 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-select, .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
 
         table {
@@ -200,6 +215,7 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
+            display: inline-block;
         }
 
         .status-completed {
@@ -262,6 +278,41 @@
             cursor: pointer;
         }
 
+        .btn-success {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -290,15 +341,15 @@
                 <span class="menu-icon">📊</span>
                 <span>Dashboard</span>
             </div>
-            <div class="menu-item" data-section="events">
-                <span class="menu-icon">🎪</span>
-                <span>Events</span>
-            </div>
             <div class="menu-item" data-section="transactions">
                 <span class="menu-icon">💰</span>
                 <span>Transactions</span>
             </div>
-            <div class="menu-item" data-section="tickets">
+            <div class="menu-item" data-section="events">
+                <span class="menu-icon">🎪</span>
+                <span>Events</span>
+            </div>
+            <div class="menu-item" data-section="scan">
                 <span class="menu-icon">🎟️</span>
                 <span>Scan Tickets</span>
             </div>
@@ -310,8 +361,8 @@
         <div class="top-bar">
             <div class="page-title" id="pageTitle">Dashboard</div>
             <div class="admin-info">
-                <span>👤 Admin</span>
-                <input id="adminPassword" class="admin-pass-input" type="password" placeholder="Admin Password" autocomplete="current-password">
+                <span id="adminName">👤 Admin</span>
+                <a href="/" class="back-to-site">← Back to Site</a>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </div>
@@ -332,7 +383,7 @@
                     <div class="stat-value" id="activeEvents">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-title">Total Tickets Sold</div>
+                    <div class="stat-title">Tickets Sold</div>
                     <div class="stat-value" id="ticketsSold">0</div>
                 </div>
             </div>
@@ -341,8 +392,38 @@
                     <h3>Recent Transactions</h3>
                 </div>
                 <table id="recentTransactions">
-                    <thead><tr><th>Reference</th><th>Event</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-                    <tbody><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+                    <thead>
+                        <tr><th>Reference</th><th>Customer</th><th>Event</th><th>Amount</th><th>Status</th><th>Date</th>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" class="loading">Loading...</td>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transactions Section -->
+        <div id="transactionsSection" style="display: none;">
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>All Transactions</h3>
+                    <div class="filter-group">
+                        <select id="statusFilter" class="filter-select" onchange="filterTransactions()">
+                            <option value="all">All Status</option>
+                            <option value="completed">Completed</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                        <input type="text" id="searchFilter" class="filter-input" placeholder="Search by email..." onkeyup="filterTransactions()">
+                    </div>
+                </div>
+                <table id="transactionsTable">
+                    <thead>
+                        <tr><th>Reference</th><th>Customer</th><th>Email</th><th>Event</th><th>Tickets</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="9" class="loading">Loading...</td>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -365,47 +446,43 @@
             <div class="table-container">
                 <h3 style="margin-bottom: 20px;">📋 All Events</h3>
                 <table id="eventsTable">
-                    <thead><tr><th>Name</th><th>Date</th><th>Price</th><th>Sold/Cap</th><th>Actions</th></tr></thead>
-                    <tbody><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Transactions Section -->
-        <div id="transactionsSection" style="display: none;">
-            <div class="table-container">
-                <h3 style="margin-bottom: 20px;">💰 All Transactions</h3>
-                <table id="transactionsTable">
-                    <thead><tr><th>Reference</th><th>Customer</th><th>Event</th><th>Tickets</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-                    <tbody><tr><td colspan="8" class="loading">Loading...</td></tr></tbody>
+                    <thead><tr><th>Name</th><th>Date</th><th>Venue</th><th>Price</th><th>Sold/Cap</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody><tr><td colspan="7" class="loading">Loading...</td></tr></tbody>
                 </table>
             </div>
         </div>
 
         <!-- Scan Tickets Section -->
-        <div id="ticketsSection" style="display: none;">
+        <div id="scanSection" style="display: none;">
             <div class="form-card">
-                <h3>🔍 Scan QR Code / Validate Ticket</h3>
-                <div class="form-group"><label>Enter Receipt Number</label><input type="text" id="scanInput" placeholder="Receipt number..."></div>
+                <h3>🔍 Validate Ticket</h3>
+                <div class="form-group"><label>Enter Receipt Number</label><input type="text" id="receiptNumber" placeholder="Receipt number..."></div>
                 <button class="btn-primary" onclick="validateTicket()">Validate Ticket</button>
-                <div id="scanResult" style="margin-top: 20px;"></div>
+                <div id="validationResult" style="margin-top: 20px;"></div>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'https://ticketing-backend-tvoz.onrender.com';
-        
-        // Admin authentication
-        if (!localStorage.getItem('adminAuth')) {
-            const password = prompt('Enter Admin Password:');
-            if (password === 'Admin123!') {
-                localStorage.setItem('adminAuth', 'true');
-            } else {
-                alert('Invalid password');
-                window.location.href = '/';
+        const API_URL = 'http://localhost:3000';
+        let allTransactions = [];
+        let filteredTransactions = [];
+
+        // Check admin authentication
+        function checkAuth() {
+            const isAdmin = localStorage.getItem('isAdmin');
+            if (!isAdmin) {
+                const password = prompt('Enter Admin Password:');
+                if (password === 'Admin123!') {
+                    localStorage.setItem('isAdmin', 'true');
+                    document.getElementById('adminName').innerHTML = '👤 Administrator';
+                } else {
+                    alert('Invalid password');
+                    window.location.href = '/';
+                }
             }
         }
+        checkAuth();
 
         // Sidebar navigation
         document.querySelectorAll('.menu-item').forEach(item => {
@@ -417,12 +494,12 @@
                 document.querySelectorAll('[id$="Section"]').forEach(sec => sec.style.display = 'none');
                 document.getElementById(`${section}Section`).style.display = 'block';
                 
-                const titles = {dashboard:'Dashboard', events:'Events', transactions:'Transactions', tickets:'Scan Tickets'};
+                const titles = {dashboard:'Dashboard', transactions:'Transactions', events:'Events', scan:'Scan Tickets'};
                 document.getElementById('pageTitle').innerText = titles[section];
                 
                 if (section === 'dashboard') loadDashboard();
-                if (section === 'events') loadEvents();
                 if (section === 'transactions') loadTransactions();
+                if (section === 'events') loadEvents();
             });
         });
 
@@ -445,10 +522,59 @@
                 const trans = await transRes.json();
                 const tbody = document.querySelector('#recentTransactions tbody');
                 tbody.innerHTML = '';
-                (trans.transactions || []).slice(0,5).forEach(t => {
-                    tbody.innerHTML += `<tr><td>${t.reference || 'N/A'}</td><td>${t.eventId?.name || 'Event'}</td><td>KES ${t.amount}</td><td><span class="status-badge status-${t.status}">${t.status}</span></td><td>${new Date(t.createdAt).toLocaleDateString()}</td></tr>`;
+                (trans.transactions || []).slice(0,10).forEach(t => {
+                    tbody.innerHTML += `<tr>
+                        <td>${t.reference || 'N/A'}</td>
+                        <td>${t.name || 'N/A'}</td>
+                        <td>${t.eventId?.name || 'Event'}</td>
+                        <td>KES ${t.amount}</td>
+                        <td><span class="status-badge status-${t.status}">${t.status}</span></td>
+                        <td>${new Date(t.createdAt).toLocaleDateString()}</td>
+                    </tr>`;
                 });
             } catch(e) { console.error(e); }
+        }
+
+        async function loadTransactions() {
+            try {
+                const res = await fetch(`${API_URL}/api/transactions`);
+                const data = await res.json();
+                allTransactions = data.transactions || [];
+                filteredTransactions = allTransactions;
+                displayTransactions();
+            } catch(e) { console.error(e); }
+        }
+
+        function displayTransactions() {
+            const tbody = document.querySelector('#transactionsTable tbody');
+            tbody.innerHTML = '';
+            filteredTransactions.forEach(t => {
+                const isPending = t.status === 'pending';
+                tbody.innerHTML += `<tr>
+                    <td>${t.reference || 'N/A'}</td>
+                    <td>${t.name || 'N/A'}</td>
+                    <td>${t.email || 'N/A'}</td>
+                    <td>${t.eventId?.name || 'Event'}</td>
+                    <td>${t.tickets}</td>
+                    <td>KES ${t.amount}</td>
+                    <td><span class="status-badge status-${t.status}">${t.status}</span></td>
+                    <td>${new Date(t.createdAt).toLocaleString()}</td>
+                    <td>
+                        ${isPending ? `<button class="btn-success" onclick="completeTransaction('${t._id}', '${t.checkoutRequestId}', ${t.amount})">✅ Complete</button>` : '—'}
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function filterTransactions() {
+            const status = document.getElementById('statusFilter').value;
+            const search = document.getElementById('searchFilter').value.toLowerCase();
+            filteredTransactions = allTransactions.filter(t => {
+                const matchStatus = status === 'all' || t.status === status;
+                const matchSearch = !search || (t.email && t.email.toLowerCase().includes(search)) || (t.name && t.name.toLowerCase().includes(search));
+                return matchStatus && matchSearch;
+            });
+            displayTransactions();
         }
 
         async function loadEvents() {
@@ -458,58 +584,19 @@
                 const tbody = document.querySelector('#eventsTable tbody');
                 tbody.innerHTML = '';
                 (data.events || []).forEach(e => {
-                    tbody.innerHTML += `<tr><td>${e.name}</td><td>${new Date(e.date).toLocaleDateString()}</td><td>KES ${e.price}</td><td>${e.ticketsSold || 0}/${e.capacity}</td><td><button class="btn-danger" onclick="deleteEvent('${e._id}')">Delete</button></td></tr>`;
+                    const sold = e.ticketsSold || 0;
+                    const status = sold >= e.capacity ? 'Sold Out' : 'Active';
+                    tbody.innerHTML += `<tr>
+                        <td>${e.name}</td>
+                        <td>${new Date(e.date).toLocaleDateString()}</td>
+                        <td>${e.venue}</td>
+                        <td>KES ${e.price}</td>
+                        <td>${sold}/${e.capacity}</td>
+                        <td><span class="status-badge" style="background:${status === 'Sold Out' ? '#f8d7da' : '#d4edda'}">${status}</span></td>
+                        <td><button class="btn-danger" onclick="deleteEvent('${e._id}')">Delete</button></td>
+                    </tr>`;
                 });
             } catch(e) { console.error(e); }
-        }
-
-        async function loadTransactions() {
-            try {
-                const res = await fetch(`${API_URL}/api/transactions`);
-                const data = await res.json();
-                const tbody = document.querySelector('#transactionsTable tbody');
-                tbody.innerHTML = '';
-                (data.transactions || []).forEach(t => {
-                    tbody.innerHTML += `<tr><td>${t.reference || 'N/A'}</td><td>${t.name || 'N/A'}</td><td>${t.eventId?.name || 'Event'}</td><td>${t.tickets}</td><td>KES ${t.amount}</td><td><span class="status-badge status-${t.status}">${t.status}</span></td><td>${new Date(t.createdAt).toLocaleDateString()}</td><td>${t.status === 'pending' ? `<button class="btn-primary" onclick="completeTransaction('${t._id}', '${t.checkoutRequestId}', ${t.amount})">Complete</button>` : ''}</td></tr>`;
-                });
-            } catch(e) { console.error(e); }
-        }
-
-        async function completeTransaction(transactionId, checkoutId, amount) {
-            if (!confirm(`Complete this transaction for KES ${amount}?`)) return;
-            const passwordInput = document.getElementById('adminPassword');
-            const password = passwordInput?.value?.trim();
-            if (!password) {
-                alert('Please enter the admin password in the top-right field.');
-                return;
-            }
-            if (password !== 'Admin123!') {
-                alert('Invalid password');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_URL}/api/admin/complete-transaction`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        password,
-                        transactionId,
-                        checkoutRequestId: checkoutId,
-                        amount
-                    })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    alert('✅ Transaction completed successfully!');
-                    loadTransactions();
-                    loadDashboard();
-                } else {
-                    alert('❌ Failed: ' + (result.error || 'Unknown error'));
-                }
-            } catch (error) {
-                alert('❌ Error: ' + error.message);
-            }
         }
 
         async function createEvent() {
@@ -523,36 +610,87 @@
                 category: document.getElementById('eventCategory').value,
                 status: 'active'
             };
-            if (!event.name || !event.date || !event.price) { alert('Please fill required fields'); return; }
+            if (!event.name || !event.date || !event.price) { alert('Fill required fields'); return; }
             try {
-                const res = await fetch(`${API_URL}/api/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(event) });
-                if (res.ok) { alert('✅ Event created!'); loadEvents(); }
-                else { alert('❌ Failed to create event'); }
+                const res = await fetch(`${API_URL}/api/events`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(event)
+                });
+                if (res.ok) {
+                    alert('✅ Event created!');
+                    document.getElementById('eventName').value = '';
+                    document.getElementById('eventDesc').value = '';
+                    document.getElementById('eventVenue').value = '';
+                    document.getElementById('eventPrice').value = '';
+                    document.getElementById('eventCapacity').value = '';
+                    loadEvents();
+                } else { alert('❌ Failed to create event'); }
             } catch(e) { alert('Error creating event'); }
         }
 
         async function deleteEvent(id) {
-            if (confirm('⚠️ Delete this event? This cannot be undone.')) {
+            if (confirm('Delete this event?')) {
                 await fetch(`${API_URL}/api/events/${id}`, { method: 'DELETE' });
                 loadEvents();
             }
         }
 
+        // Complete a pending transaction manually
+        async function completeTransaction(transactionId, checkoutId, amount) {
+            if (!confirm(`Complete this transaction for KES ${amount}?`)) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/admin/complete-transaction`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        transactionId: transactionId,
+                        checkoutRequestId: checkoutId,
+                        amount: amount
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Transaction completed successfully!');
+                    loadTransactions(); // Refresh the list
+                    loadDashboard(); // Update stats
+                } else {
+                    alert('❌ Failed: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
         async function validateTicket() {
-            const receipt = document.getElementById('scanInput').value.trim();
-            if (!receipt) { alert('Please enter a receipt number'); return; }
+            const receipt = document.getElementById('receiptNumber').value.trim();
+            if (!receipt) { alert('Enter receipt number'); return; }
             try {
                 const res = await fetch(`${API_URL}/api/validate-ticket/${receipt}`);
                 const data = await res.json();
-                document.getElementById('scanResult').innerHTML = data.valid ? 
-                    `<div style="background:#d4edda;padding:15px;border-radius:5px;border-left:4px solid #28a745;"><strong>✅ VALID TICKET!</strong><br>Event: ${data.ticket.event}<br>Name: ${data.ticket.name}<br>Tickets: ${data.ticket.tickets}</div>` :
-                    `<div style="background:#f8d7da;padding:15px;border-radius:5px;border-left:4px solid #dc3545;"><strong>❌ INVALID TICKET!</strong><br>${data.error}</div>`;
+                const resultDiv = document.getElementById('validationResult');
+                if (data.valid) {
+                    resultDiv.innerHTML = `<div style="background:#d4edda;padding:15px;border-radius:5px;">
+                        <strong>✅ VALID TICKET!</strong><br>
+                        Event: ${data.ticket.event}<br>
+                        Name: ${data.ticket.name}<br>
+                        Tickets: ${data.ticket.tickets}
+                    </div>`;
+                } else {
+                    resultDiv.innerHTML = `<div style="background:#f8d7da;padding:15px;border-radius:5px;">
+                        <strong>❌ INVALID TICKET!</strong><br>
+                        ${data.error}
+                    </div>`;
+                }
             } catch(e) { alert('Error validating ticket'); }
         }
 
         function logout() {
-            localStorage.removeItem('adminAuth');
-            location.reload();
+            localStorage.removeItem('isAdmin');
+            window.location.href = '/';
         }
 
         // Load dashboard by default

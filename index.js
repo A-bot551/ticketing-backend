@@ -7,6 +7,7 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
+const path = require('path');
 
 const { initiateSTKPush } = require("./daraja");
 const Transaction = require("./models/Transaction");
@@ -102,6 +103,7 @@ const generateQRCode = async (data) => {
 // ADMIN MIDDLEWARE
 // ============================================
 const requireAdmin = (req, res, next) => {
+    console.log('requireAdmin check:', req.session.adminId);
     if (!req.session.adminId) {
         return res.status(401).json({ error: "Unauthorized. Admin access required." });
     }
@@ -109,37 +111,20 @@ const requireAdmin = (req, res, next) => {
 };
 
 // ============================================
+// SERVE HTML PAGE
+// ============================================
+// Serve HTML page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// ============================================
 // TEST ENDPOINTS
 // ============================================
-app.get("/", (req, res) => {
-    res.json({ 
-        message: "MPesa API is running",
-        version: "4.0.0",
-        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-        features: {
-            qrCodes: true,
-            adminDashboard: true,
-            userAccounts: true,
-            sms: false
-        },
-        endpoints: {
-            home: "GET /",
-            events: "GET /api/events",
-            pay: "POST /api/pay",
-            callback: "POST /api/mpesa/callback",
-            status: "GET /api/payment-status/:checkoutId",
-            transactions: "GET /api/transactions",
-            transaction: "GET /api/transaction/:reference",
-            stats: "GET /api/stats",
-            health: "GET /api/health",
-            testEmail: "POST /api/test-email",
-            validateTicket: "GET /api/validate-ticket/:receiptNumber",
-            useTicket: "POST /api/use-ticket/:receiptNumber",
-            admin: "POST /api/admin/login",
-            user: "POST /api/auth/register"
-        }
-    });
-});
 
 // ============================================
 // TEMPORARY SEED ENDPOINT - REMOVE AFTER USE
@@ -291,6 +276,40 @@ app.post("/api/pay", async (req, res) => {
         
         await transaction.save();
         console.log("✅ Transaction saved to database");
+        
+        // 🔥 AUTO-COMPLETE FOR SANDBOX TESTING 🔥
+        // Disabled for production because real payments should complete via Safaricom callback.
+        // setTimeout(async () => {
+        //     try {
+        //         const receiptNumber = 'RKT' + Date.now() + Math.floor(Math.random() * 1000);
+        //         transaction.status = 'completed';
+        //         transaction.receiptNumber = receiptNumber;
+        //         transaction.completedAt = new Date();
+        //         await transaction.save();
+        //         
+        //         const event = await Event.findById(transaction.eventId);
+        //         if (event) {
+        //             event.ticketsSold += transaction.tickets;
+        //             await event.save();
+        //         }
+        //         
+        //         if (transaction.email) {
+        //             await sendTicketEmail({
+        //                 name: transaction.name || 'Valued Customer',
+        //                 email: transaction.email,
+        //                 phone: transaction.phone,
+        //                 event: event,
+        //                 tickets: transaction.tickets,
+        //                 amount: transaction.amount,
+        //                 receiptNumber: receiptNumber,
+        //                 date: new Date()
+        //             });
+        //         }
+        //         console.log(`✅ Auto-completed: ${receiptNumber}`);
+        //     } catch (autoError) {
+        //         console.error('Auto-complete error:', autoError);
+        //     }
+        // }, 2000);
 
         res.json({
             success: true,
@@ -315,100 +334,126 @@ app.post("/api/pay", async (req, res) => {
 // ============================================
 app.post("/api/mpesa/callback", async (req, res) => {
     console.log("📞 Callback received:", JSON.stringify(req.body, null, 2));
-    
+
+    // Check if callback has valid data
+    if (!req.body || !req.body.Body || !req.body.Body.stkCallback) {
+        console.log("⚠️ Invalid callback received - missing stkCallback");
+        // Still return success to Safaricom
+        return res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
+    }
+
     try {
         const callbackData = req.body.Body.stkCallback;
-        
+
         // Find transaction
         const transaction = await Transaction.findOne({
             checkoutRequestId: callbackData.CheckoutRequestID
         });
-        
-        if (transaction) {
-            // Get event details
-            const event = await Event.findById(transaction.eventId);
-            
-            if (callbackData.ResultCode === 0) {
-                // Payment successful
-                const items = callbackData.CallbackMetadata.Item;
-                const receiptNumber = items.find(i => i.Name === 'MpesaReceiptNumber')?.Value;
-                const amount = items.find(i => i.Name === 'Amount')?.Value;
-                
-                // Generate final QR code with receipt number
-                const finalQRCode = await generateQRCode({
-                    receiptNumber: receiptNumber,
-                    eventName: event.name,
-                    name: transaction.name,
-                    date: new Date().toISOString(),
-                    tickets: transaction.tickets
-                });
-                
-                // Update transaction
-                transaction.status = 'completed';
-                transaction.receiptNumber = receiptNumber;
-                transaction.completedAt = new Date();
-                transaction.callbackData = callbackData;
-                transaction.qrCode = finalQRCode;
-                await transaction.save();
-                
-                // Update event tickets sold
-                if (event) {
-                    event.ticketsSold += transaction.tickets;
-                    await event.save();
-                }
-                
-                console.log(`✅ Payment completed: ${receiptNumber} for KES ${amount}`);
-                
-                // 📧 SEND EMAIL TICKET WITH QR CODE
-                if (transaction.email) {
-                    console.log(`📧 Sending ticket email to ${transaction.email}...`);
-                    
-                    const emailResult = await sendTicketEmail({
-                        name: transaction.name || 'Valued Customer',
-                        email: transaction.email,
-                        phone: transaction.phone,
-                        event: event,
-                        tickets: transaction.tickets,
-                        amount: transaction.amount,
-                        receiptNumber: receiptNumber,
-                        date: new Date(),
-                        qrCode: finalQRCode
-                    });
-                    
-                    if (emailResult.success) {
-                        console.log(`✅ Ticket email sent to ${transaction.email}`);
-                    } else {
-                        console.log(`❌ Failed to send email: ${emailResult.error}`);
-                    }
-                }
-                
-                // 📱 SMS DISABLED - Uncomment when ready
-                /*
-                if (transaction.phone) {
-                    console.log(`📱 Would send SMS to ${transaction.phone} (disabled)`);
-                    // const smsResult = await sendTicketSMS(transaction.phone, {
-                    //     eventName: event.name,
-                    //     receiptNumber: receiptNumber,
-                    //     tickets: transaction.tickets,
-                    //     amount: transaction.amount
-                    // });
-                }
-                */
-                
-            } else {
-                // Payment failed
-                transaction.status = 'failed';
-                transaction.callbackData = callbackData;
-                await transaction.save();
-                console.log(`❌ Payment failed: ${callbackData.ResultDesc}`);
-            }
+
+        if (!transaction) {
+            console.log("⚠️ Transaction not found for ID:", callbackData.CheckoutRequestID);
+            return res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
         }
-        
-        res.json({ ResultCode: 0, ResultDesc: "Success" });
-        
+
+        // Get event details
+        const event = await Event.findById(transaction.eventId);
+
+        if (callbackData.ResultCode === 0) {
+            // Payment successful
+            const items = callbackData.CallbackMetadata.Item;
+            const receiptNumber = items.find(i => i.Name === 'MpesaReceiptNumber')?.Value;
+            const amount = items.find(i => i.Name === 'Amount')?.Value;
+
+            // Generate final QR code with receipt number
+            const finalQRCode = await generateQRCode({
+                receiptNumber: receiptNumber,
+                eventName: event.name,
+                name: transaction.name,
+                date: new Date().toISOString(),
+                tickets: transaction.tickets
+            });
+
+            // In your M-Pesa callback, after generating finalQRCode
+            console.log("🔍 QR Code generated:", finalQRCode ? "✅ Yes (length: " + finalQRCode.length + ")" : "❌ No");
+
+            // Update transaction
+            transaction.status = 'completed';
+            transaction.receiptNumber = receiptNumber;
+            transaction.completedAt = new Date();
+            transaction.callbackData = callbackData;
+            transaction.qrCode = finalQRCode;
+            await transaction.save();
+
+            // Update event tickets sold
+            if (event) {
+                event.ticketsSold += transaction.tickets;
+                await event.save();
+            }
+
+            console.log(`✅ Payment completed: ${receiptNumber} for KES ${amount}`);
+
+            // 📧 SEND EMAIL TICKET WITH QR CODE
+            if (transaction.email) {
+                console.log(`📧 Sending ticket email to ${transaction.email}...`);
+
+                // Make sure we have a valid QR code
+                let qrCodeToSend = finalQRCode;
+                if (!qrCodeToSend) {
+                    console.log("⚠️ No QR code found, generating new one...");
+                    qrCodeToSend = await generateQRCode({
+                        receiptNumber: receiptNumber,
+                        eventName: event.name,
+                        name: transaction.name,
+                        date: new Date().toISOString(),
+                        tickets: transaction.tickets
+                    });
+                }
+
+                const emailResult = await sendTicketEmail({
+                    name: transaction.name || 'Valued Customer',
+                    email: transaction.email,
+                    phone: transaction.phone,
+                    event: event,
+                    tickets: transaction.tickets,
+                    amount: transaction.amount,
+                    receiptNumber: receiptNumber,
+                    date: new Date(),
+                    qrCode: qrCodeToSend
+                });
+
+                if (emailResult.success) {
+                    console.log(`✅ Ticket email sent to ${transaction.email}`);
+                } else {
+                    console.log(`❌ Failed to send email: ${emailResult.error}`);
+                }
+            }
+
+            // 📱 SMS DISABLED - Uncomment when ready
+            /*
+            if (transaction.phone) {
+                console.log(`📱 Would send SMS to ${transaction.phone} (disabled)`);
+                // const smsResult = await sendTicketSMS(transaction.phone, {
+                //     eventName: event.name,
+                //     receiptNumber: receiptNumber,
+                //     tickets: transaction.tickets,
+                //     amount: transaction.amount
+                // });
+            }
+            */
+
+        } else {
+            // Payment failed
+            transaction.status = 'failed';
+            transaction.callbackData = callbackData;
+            await transaction.save();
+            console.log(`❌ Payment failed: ${callbackData.ResultDesc}`);
+        }
+
+        res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
+
     } catch (error) {
         console.error("Callback error:", error);
-        res.json({ ResultCode: 0, ResultDesc: "Success" });
+        res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
     }
 });
 
@@ -648,14 +693,22 @@ app.post("/api/admin/login", async (req, res) => {
         admin.lastLogin = new Date();
         await admin.save();
         
-        res.json({ 
-            success: true, 
-            message: "Login successful",
-            admin: {
-                username: admin.username,
-                email: admin.email,
-                lastLogin: admin.lastLogin
+        console.log('Admin login successful, session.adminId:', req.session.adminId);
+        
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.status(500).json({ error: "Session error" });
             }
+            res.json({ 
+                success: true, 
+                message: "Login successful",
+                admin: {
+                    username: admin.username,
+                    email: admin.email,
+                    lastLogin: admin.lastLogin
+                }
+            });
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -736,6 +789,82 @@ app.delete("/api/admin/events/:id", requireAdmin, async (req, res) => {
         await Event.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: "Event deleted" });
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Admin: Manually complete a pending transaction
+app.post("/api/admin/complete-transaction", async (req, res) => {
+    try {
+        const { password, transactionId, checkoutRequestId, amount } = req.body;
+        if (password !== 'Admin123!') {
+            return res.status(401).json({ error: "Invalid admin password" });
+        }
+        
+        // Find the transaction
+        const transaction = await Transaction.findById(transactionId);
+        
+        if (!transaction) {
+            return res.status(404).json({ error: "Transaction not found" });
+        }
+        
+        if (transaction.status === 'completed') {
+            return res.status(400).json({ error: "Transaction already completed" });
+        }
+        
+        // Generate receipt number
+        const receiptNumber = 'RKT' + Date.now() + Math.floor(Math.random() * 1000);
+        
+        // Update transaction
+        transaction.status = 'completed';
+        transaction.receiptNumber = receiptNumber;
+        transaction.completedAt = new Date();
+        transaction.callbackData = {
+            MerchantRequestID: 'manual_' + Date.now(),
+            CheckoutRequestID: checkoutRequestId,
+            ResultCode: 0,
+            ResultDesc: "Success (Manually completed by admin)",
+            CallbackMetadata: {
+                Item: [
+                    { Name: "Amount", Value: amount },
+                    { Name: "MpesaReceiptNumber", Value: receiptNumber },
+                    { Name: "PhoneNumber", Value: transaction.phone }
+                ]
+            }
+        };
+        
+        await transaction.save();
+        
+        // Update event tickets sold
+        const event = await Event.findById(transaction.eventId);
+        if (event) {
+            event.ticketsSold += transaction.tickets;
+            await event.save();
+        }
+        
+        // Send email ticket
+        if (transaction.email) {
+            try {
+                const emailResult = await sendTicketEmail({
+                    name: transaction.name || 'Valued Customer',
+                    email: transaction.email,
+                    phone: transaction.phone,
+                    event: event,
+                    tickets: transaction.tickets,
+                    amount: transaction.amount,
+                    receiptNumber: receiptNumber,
+                    date: new Date()
+                });
+                console.log(emailResult.success ? '✅ Email sent' : '❌ Email failed');
+            } catch (emailError) {
+                console.error('Email error:', emailError);
+            }
+        }
+        
+        res.json({ success: true, receiptNumber });
+        
+    } catch (error) {
+        console.error("Complete transaction error:", error);
         res.status(500).json({ error: error.message });
     }
 });
