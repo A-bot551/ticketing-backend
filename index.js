@@ -37,10 +37,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 // ============================================
 const corsOptions = {
     origin: [
-        'http://localhost:3000', 
-        'https://ticketing-backend-tvoz.onrender.com',
-        'https://ticketmasterkenya.netlify.app',
-        'https://ticketeventsmaster.netlify.app'
+        'http://localhost:3000'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -795,12 +792,9 @@ app.delete("/api/admin/events/:id", requireAdmin, async (req, res) => {
 });
 
 // Admin: Manually complete a pending transaction
-app.post("/api/admin/complete-transaction", async (req, res) => {
+app.post("/api/admin/complete-transaction", requireAdmin, async (req, res) => {
     try {
-        const { password, transactionId, checkoutRequestId, amount } = req.body;
-        if (password !== 'Admin123!') {
-            return res.status(401).json({ error: "Invalid admin password" });
-        }
+        const { transactionId, checkoutRequestId, amount } = req.body;
         
         // Find the transaction
         const transaction = await Transaction.findById(transactionId);

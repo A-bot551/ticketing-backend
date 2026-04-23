@@ -441,7 +441,7 @@
                 <div class="form-group"><label>Category</label>
                     <select id="eventCategory"><option>Concert</option><option>Tech</option><option>Business</option><option>Music</option><option>Food</option><option>Party</option></select>
                 </div>
-                <button class="btn-primary" onclick="createEvent()">✨ Create Event</button>
+                <button class="btn-primary" onclick="createNewEvent()">✨ Create Event</button>
             </div>
             <div class="table-container">
                 <h3 style="margin-bottom: 20px;">📋 All Events</h3>
@@ -464,25 +464,97 @@
     </div>
 
     <script>
-        const API_URL = 'https://ticketing-backend-tvoz.onrender.com';
+        const API_URL = 'http://localhost:3000';
         let allTransactions = [];
         let filteredTransactions = [];
 
-        // Check admin authentication
-        function checkAuth() {
-            const isAdmin = localStorage.getItem('isAdmin');
-            if (!isAdmin) {
-                const password = prompt('Enter Admin Password:');
-                if (password === 'Admin123!') {
-                    localStorage.setItem('isAdmin', 'true');
-                    document.getElementById('adminName').innerHTML = '👤 Administrator';
-                } else {
-                    alert('Invalid password');
-                    window.location.href = '/';
+        // Admin authentication - use the same login as main site
+        async function checkAdminAuth() {
+            // Check if already logged in via localStorage
+            const user = localStorage.getItem('user');
+            if (user) {
+                const userData = JSON.parse(user);
+                if (userData.email === 'admin@ticketmaster.com') {
+                    return true;
                 }
             }
+            
+            const password = prompt('Enter Admin Password:');
+            if (!password) return false;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: 'admin@ticketmaster.com', 
+                        password: password 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    return true;
+                } else {
+                    alert('Invalid password');
+                    return false;
+                }
+            } catch (error) {
+                alert('Login error: ' + error.message);
+                return false;
+            }
         }
-        checkAuth();
+
+        // Update window.onload
+        window.onload = async function() {
+            const isAuth = await checkAdminAuth();
+            if (isAuth) {
+                loadDashboard();
+                loadEvents();
+                loadTransactions();
+            } else {
+                window.location.href = '/';
+            }
+        };
+
+        // Helper function for authenticated admin requests
+        const adminFetch = async (url, options = {}) => {
+            const defaultOptions = {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            const mergedOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...options.headers
+                }
+            };
+            
+            const response = await fetch(url, mergedOptions);
+            
+            if (response.status === 401) {
+                // Token/session expired
+                localStorage.removeItem('adminLoggedIn');
+                localStorage.removeItem('user');
+                alert('Session expired. Please login again.');
+                window.location.href = '/';
+                throw new Error('Session expired');
+            }
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error || `HTTP ${response.status}`);
+            }
+            
+            return response;
+        };
 
         // Sidebar navigation
         document.querySelectorAll('.menu-item').forEach(item => {
@@ -599,7 +671,7 @@
             } catch(e) { console.error(e); }
         }
 
-        async function createEvent() {
+        async function createNewEvent() {
             const event = {
                 name: document.getElementById('eventName').value,
                 description: document.getElementById('eventDesc').value,
@@ -610,23 +682,36 @@
                 category: document.getElementById('eventCategory').value,
                 status: 'active'
             };
-            if (!event.name || !event.date || !event.price) { alert('Fill required fields'); return; }
+            
+            if (!event.name || !event.date || !event.price) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
             try {
-                const res = await fetch(`${API_URL}/api/events`, {
+                const response = await fetch(`${API_URL}/api/admin/events`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify(event)
                 });
-                if (res.ok) {
-                    alert('✅ Event created!');
+                
+                if (response.ok) {
+                    alert('✅ Event created successfully!');
+                    loadEvents();
+                    // Clear form
                     document.getElementById('eventName').value = '';
                     document.getElementById('eventDesc').value = '';
                     document.getElementById('eventVenue').value = '';
                     document.getElementById('eventPrice').value = '';
                     document.getElementById('eventCapacity').value = '';
-                    loadEvents();
-                } else { alert('❌ Failed to create event'); }
-            } catch(e) { alert('Error creating event'); }
+                } else {
+                    const error = await response.json();
+                    alert('❌ Failed: ' + (error.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
         }
 
         async function deleteEvent(id) {
@@ -641,9 +726,8 @@
             if (!confirm(`Complete this transaction for KES ${amount}?`)) return;
             
             try {
-                const response = await fetch(`${API_URL}/api/admin/complete-transaction`, {
+                const response = await adminFetch(`${API_URL}/api/admin/complete-transaction`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         transactionId: transactionId,
                         checkoutRequestId: checkoutId,
@@ -655,8 +739,8 @@
                 
                 if (result.success) {
                     alert('✅ Transaction completed successfully!');
-                    loadTransactions(); // Refresh the list
-                    loadDashboard(); // Update stats
+                    loadTransactions();
+                    loadDashboard();
                 } else {
                     alert('❌ Failed: ' + (result.error || 'Unknown error'));
                 }

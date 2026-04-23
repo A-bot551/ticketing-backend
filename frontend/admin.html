@@ -360,7 +360,7 @@
                 <div class="form-group"><label>Category</label>
                     <select id="eventCategory"><option>Concert</option><option>Tech</option><option>Business</option><option>Music</option><option>Food</option><option>Party</option></select>
                 </div>
-                <button class="btn-primary" onclick="createEvent()">✨ Create Event</button>
+                <button class="btn-primary" onclick="createNewEvent()">✨ Create Event</button>
             </div>
             <div class="table-container">
                 <h3 style="margin-bottom: 20px;">📋 All Events</h3>
@@ -394,7 +394,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://ticketing-backend-tvoz.onrender.com';
+        const API_URL = 'http://localhost:3000';
         
         // Admin authentication
         if (!localStorage.getItem('adminAuth')) {
@@ -512,7 +512,7 @@
             }
         }
 
-        async function createEvent() {
+        async function createNewEvent() {
             const event = {
                 name: document.getElementById('eventName').value,
                 description: document.getElementById('eventDesc').value,
